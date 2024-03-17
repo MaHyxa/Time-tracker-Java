@@ -53,7 +53,7 @@ public class TaskService implements ITaskService {
         if(thisTask.isPresent())
         {
             Task updatedTask = thisTask.get();
-            updatedTask.setSpentTime(stop - updatedTask.getStartTime());
+            updatedTask.setSpentTime(updatedTask.getSpentTime() + stop - updatedTask.getStartTime());
             return taskRepository.save(updatedTask);
         }
         else {
@@ -62,7 +62,7 @@ public class TaskService implements ITaskService {
     }
 
     @Override
-    public Task complete(Long id, boolean complete) throws ChangeSetPersister.NotFoundException {
+    public Task complete(Long id) throws ChangeSetPersister.NotFoundException {
         Optional<Task> thisTask = this.getTaskById(id);
         if(thisTask.isPresent())
         {

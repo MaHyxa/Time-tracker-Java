@@ -18,7 +18,7 @@ public interface ITaskService {
 
     Task stopTime (Long id, Long stop) throws ChangeSetPersister.NotFoundException;
 
-    Task complete (Long id, boolean complete) throws ChangeSetPersister.NotFoundException;
+    Task complete (Long id) throws ChangeSetPersister.NotFoundException;
 
     void deleteTask (Long id);
 
