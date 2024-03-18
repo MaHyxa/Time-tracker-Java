@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -23,5 +25,9 @@ public class User {
 
     @NotBlank
     private String password;
+
+    @OneToMany
+    @JoinColumn
+    private List<Task> user_tasks;
 
 }

@@ -1,9 +1,6 @@
 package MaHyxa.Time.tracker.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +18,9 @@ public class Task {
     @NotBlank(message = "Please name your task")
     private String taskName;
 
-    private Long user_id;
+    @ManyToOne
+    @JoinColumn
+    private User user;
 
     private Long spentTime;
 
@@ -29,5 +28,6 @@ public class Task {
 
     private boolean complete;
 
+    private boolean isActive;
 
 }

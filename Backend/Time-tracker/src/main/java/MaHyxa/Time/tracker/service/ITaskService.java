@@ -12,11 +12,13 @@ public interface ITaskService {
 
     Optional<List<Task>> getAllTasksByUserId (Long id);
 
-    Task createTask (Long id, Task task);
+    Optional<List<Long>> getAllActiveTasksIds();
 
-    Task startTime (Long id, Long start) throws ChangeSetPersister.NotFoundException;
+    Task createTask (Task task);
 
-    Task stopTime (Long id, Long stop) throws ChangeSetPersister.NotFoundException;
+    Task startTime (Long id) throws ChangeSetPersister.NotFoundException;
+
+    Task stopTime (Long id) throws ChangeSetPersister.NotFoundException;
 
     Task complete (Long id) throws ChangeSetPersister.NotFoundException;
 

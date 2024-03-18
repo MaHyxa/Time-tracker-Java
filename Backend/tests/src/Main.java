@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.Chronology;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,6 @@ public class Main {
 
 
         long l = System.nanoTime();
-        Thread.sleep(1000);
         long p = System.nanoTime();
 
         long t = p - l;
@@ -28,6 +28,19 @@ public class Main {
 
 
         System.out.println(timeInHHMMSS);
+
+        LinkedList<Integer> s = new LinkedList<>();
+        s.add(1);
+        s.add(2);
+        s.add(3);
+        s.add(4);
+        s.add(5);
+        s.add(6);
+
+        s.remove((Integer) 6);
+
+        System.out.println("Final LinkedList:" + s);
+
 
 
 

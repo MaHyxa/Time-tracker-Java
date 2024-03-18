@@ -20,8 +20,8 @@ public class TaskController {
     private final ITaskService taskService;
 
     @PostMapping("/new")
-    public ResponseEntity<Task> createTask(@Valid @RequestBody Long id, Task task) {
-        Task newTask = taskService.createTask(id, task);
+    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
+        Task newTask = taskService.createTask(task);
         return ResponseEntity.status(HttpStatus.CREATED).body(newTask);
     }
 
@@ -51,13 +51,13 @@ public class TaskController {
 
     @PutMapping("my-tasks/{id}/start")
     public ResponseEntity<Task> startTask(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Task changetask = taskService.startTime(id, System.nanoTime());
+        Task changetask = taskService.startTime(id);
         return ResponseEntity.ok(changetask);
     }
 
     @PutMapping("my-tasks/{id}/stop")
     public ResponseEntity<Task> stopTask(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Task changetask = taskService.stopTime(id, System.nanoTime());
+        Task changetask = taskService.stopTime(id);
         return ResponseEntity.ok(changetask);
     }
 
