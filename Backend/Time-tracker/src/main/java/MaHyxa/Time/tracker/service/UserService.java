@@ -25,6 +25,11 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public Optional<User> getUserByNickname(String nickname) {
+        return userRepository.findByNickname(nickname);
+    }
+
+    @Override
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }

@@ -6,21 +6,43 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@CrossOrigin
 public class UserController {
 
     private final IUserService userService;
 
+
     @PostMapping("/new")
     public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        User newUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        if(userService.getUserByNickname(user.getNickname()).isPresent())
+        {
+            return ResponseEntity.status(HttpStatus.FOUND).body(user);
+        }
+        else {
+            User newUser = userService.createUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+        }
+
     }
+
+    @GetMapping("/{nickname}")
+    public ResponseEntity<String> getUserByNickname(@PathVariable String nickname) {
+        Optional<User> user = userService.getUserByNickname(nickname);
+        if(user.isPresent())
+        {
+            return ResponseEntity.ok(user.get().getNickname());
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.FOUND).body("User already exist");
+        }
+    }
+
+
 }

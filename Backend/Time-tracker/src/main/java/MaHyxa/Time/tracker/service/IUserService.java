@@ -11,6 +11,8 @@ public interface IUserService {
 
     Optional<User> getUserById (Long id);
 
+    Optional<User> getUserByNickname (String nickname);
+
     void deleteUser (Long id);
 
     User changeUserDetails (Long id, String name, String surname, String nickname) throws ChangeSetPersister.NotFoundException;
