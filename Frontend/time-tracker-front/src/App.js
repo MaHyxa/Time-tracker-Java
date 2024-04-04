@@ -1,7 +1,7 @@
 import './App.css';
-import AppBar from "./component/AppBar";
 import Login from "./component/Login";
 import Sign_In from "./component/Sign in";
+import Tasks from "./component/Tasks"
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 
 const router = createBrowserRouter([{
@@ -14,7 +14,7 @@ const router = createBrowserRouter([{
     },
     {
         path: '/my-tasks',
-        element: <div>Tasks</div>
+        element: <Tasks/>
     }])
 
 

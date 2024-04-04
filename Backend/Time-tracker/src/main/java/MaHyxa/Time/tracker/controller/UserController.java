@@ -40,7 +40,7 @@ public class UserController {
             return ResponseEntity.ok(user.get().getNickname());
         }
         else {
-            return ResponseEntity.status(HttpStatus.FOUND).body("User already exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User already exist");
         }
     }
 
