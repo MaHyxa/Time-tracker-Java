@@ -38,25 +38,26 @@ const defaultTheme = createTheme();
 export default function Sign_In() {
 
     const [name, setName] = useState('')
-    const [surname, setSurname] = useState('')
-    const [nickname, setNickname] = useState('')
+    const [lastname, setLastname] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigate = useNavigate()
     const [error, setError] = useState(null)
 
+
     const handleSubmit=(e)=>{
         e.preventDefault()
-        const user = {name, surname, nickname, password}
-        if(password.length<1 || name.length<1 || nickname.length<1){
+        const user = {name, lastname, email, password}
+        if(password.length<1 || name.length<1 || email.length<1){
             setError('Please set all required fields')
             return
         }
-        fetch("http://localhost:9192/api/user/new", {
+        fetch("http://localhost:9192/api/v1/auth/register", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify(user)
         }).then(async res => {
-            if (res.status === 201) {
+            if (res.status === 200) {
                 setError('User successfully created. You will be redirected to Login Page in 3 seconds')
                 await timeout(3000);
                 navigate('/')
@@ -67,7 +68,6 @@ export default function Sign_In() {
                 setError('Something went wrong. Please try again.')
             }
         })
-
     }
 
     return (
@@ -110,8 +110,8 @@ export default function Sign_In() {
                                     id="surname"
                                     label="Last Name"
                                     name="surname"
-                                    value={surname}
-                                    onChange={(e) => setSurname(e.target.value)}
+                                    value={lastname}
+                                    onChange={(e) => setLastname(e.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -121,8 +121,8 @@ export default function Sign_In() {
                                     id="nickname"
                                     label="Nickname"
                                     name="nickname"
-                                    value={nickname}
-                                    onChange={(e) => setNickname(e.target.value)}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                 />
                             </Grid>
                             <Grid item xs={12}>

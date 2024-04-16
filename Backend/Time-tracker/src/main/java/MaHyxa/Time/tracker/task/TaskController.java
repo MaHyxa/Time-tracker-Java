@@ -1,52 +1,46 @@
-package MaHyxa.Time.tracker.controller;
+package MaHyxa.Time.tracker.task;
 
-import MaHyxa.Time.tracker.model.Task;
-import MaHyxa.Time.tracker.service.ITaskService;
+import MaHyxa.Time.tracker.auth.AuthenticationRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/tasks")
+@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
 public class TaskController {
 
-    private final ITaskService taskService;
+    private final TaskService taskService;
 
     @PostMapping("/new")
-    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
-        Task newTask = taskService.createTask(task);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newTask);
+    public ResponseEntity<?> createTask(@RequestBody String taskName, Principal connectedUser) {
+        taskService.createTask(taskName, connectedUser);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/my-tasks")
-    public ResponseEntity<List<Task>> getAllTasksByUserId(@Valid @RequestBody Long id) throws ChangeSetPersister.NotFoundException {
-        Optional<List<Task>> tasks = taskService.getAllTasksByUserId(id);
-        if(tasks.isPresent())
-        {
-            return ResponseEntity.ok(tasks.get());
-        }
-        else {
-            throw new ChangeSetPersister.NotFoundException();
-        }
+    public ResponseEntity<List<TaskResponse>> getAllTasksByUserId(Principal connectedUser) {
+        return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
     }
 
     @GetMapping("my-tasks/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Optional<Task> task = taskService.getTaskById(id);
-        if(task.isPresent())
-        {
-            return ResponseEntity.ok(task.get());
-        }
-        else {
-            throw new ChangeSetPersister.NotFoundException();
-        }
+    public ResponseEntity<TaskResponse> getTaskById(@RequestBody TaskResponse request, Principal connectedUser) throws ChangeSetPersister.NotFoundException {
+        taskService.getTaskById(request.getId());
+        return null;
+//        if(task.isPresent())
+//        {
+//            return ResponseEntity.ok().build();
+//        }
+//        else {
+//            throw new ChangeSetPersister.NotFoundException();
+//        }
     }
 
     @PutMapping("my-tasks/{id}/start")

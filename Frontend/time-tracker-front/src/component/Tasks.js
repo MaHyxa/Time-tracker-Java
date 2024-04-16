@@ -15,8 +15,9 @@ import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { mainListItems, secondaryListItems } from './listItems';
+import { mainListItems } from './listItems';
 import Orders from './Orders';
+import {useNavigate} from "react-router-dom";
 
 function Copyright(props) {
     return (
@@ -85,6 +86,25 @@ export default function Dashboard() {
     const toggleDrawer = () => {
         setOpen(!open);
     };
+    const navigate = useNavigate()
+
+    const handleSubmit=(e)=>{
+        e.preventDefault()
+        fetch("http://localhost:9192/api/v1/auth/logout", {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+            }
+        })
+            .then(response => {
+            if (response.ok) {
+                localStorage.removeItem('jwtToken');
+                navigate('/');
+            } else {
+                throw new Error('Logout failed');
+            }
+        })
+    }
 
     return (
         <ThemeProvider theme={defaultTheme}>
@@ -117,6 +137,9 @@ export default function Dashboard() {
                         >
                             Time Tracker
                         </Typography>
+                        <Link color="inherit" href="#" onClick={handleSubmit}>
+                            Logout
+                        </Link>
                     </Toolbar>
                 </AppBar>
                 <Drawer variant="permanent" open={open}>
@@ -128,6 +151,20 @@ export default function Dashboard() {
                             px: [1],
                         }}
                     >
+                        <Typography
+                            component="h1"
+                            variant="h6"
+                            color="inherit"
+                            noWrap
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                px: [7],
+                            }}
+                        >
+                            Menu
+                        </Typography>
                         <IconButton onClick={toggleDrawer}>
                             <ChevronLeftIcon />
                         </IconButton>

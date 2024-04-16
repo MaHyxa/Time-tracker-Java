@@ -1,13 +1,15 @@
-package MaHyxa.Time.tracker.service;
+package MaHyxa.Time.tracker.task;
 
-import MaHyxa.Time.tracker.model.Task;
-import MaHyxa.Time.tracker.repository.TaskRepository;
+import MaHyxa.Time.tracker.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,32 +17,57 @@ import java.util.Optional;
 @Service
 @EnableScheduling
 @RequiredArgsConstructor
-public class TaskService implements ITaskService {
+public class TaskService {
 
 
     private final TaskRepository taskRepository;
 
-    @Override
+
     public Optional<Task> getTaskById(Long id) {
         return taskRepository.findById(id);
     }
 
-    @Override
-    public Optional<List<Task>> getAllTasksByUserId(Long id) {
-        return taskRepository.findAllUserTasks(id);
+
+    public List<TaskResponse> getAllTasksByUserId(Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        var userTasks = taskRepository.findAllUserTasks(user.getId());
+        if (userTasks.isEmpty())
+            return null;
+        List<TaskResponse> userTaskResponse = new ArrayList<>();
+
+        userTasks.forEach(task -> {
+            var taskResponse = TaskResponse.builder()
+                    .id(task.getId())
+                    .taskName(task.getTaskName())
+                    .complete(task.isComplete())
+                    .startTime(task.getStartTime())
+                    .spentTime(task.getSpentTime())
+                    .isActive(task.isActive())
+                    .build();
+            userTaskResponse.add(taskResponse);
+        });
+        return userTaskResponse;
     }
 
-    @Override
+
     public Optional<List<Long>> getAllActiveTasksIds() {
         return taskRepository.findActiveTasks();
     }
 
-    @Override
-    public Task createTask(Task task) {
-        return taskRepository.save(task);
+
+    public void createTask(String taskName, Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        var task = Task.builder()
+                .taskName(taskName)
+                .user(user)
+                .startTime(0L)
+                .spentTime(0L)
+                .build();
+        taskRepository.save(task);
     }
 
-    @Override
+
     public Task startTime(Long id) throws ChangeSetPersister.NotFoundException {
         Optional<Task> thisTask = this.getTaskById(id);
         if(thisTask.isPresent())
@@ -55,7 +82,6 @@ public class TaskService implements ITaskService {
         }
     }
 
-    @Override
     public Task stopTime(Long id) throws ChangeSetPersister.NotFoundException {
         Optional<Task> thisTask = this.getTaskById(id);
         if(thisTask.isPresent())
@@ -70,7 +96,7 @@ public class TaskService implements ITaskService {
         }
     }
 
-    @Override
+
     public Task complete(Long id) throws ChangeSetPersister.NotFoundException {
         Optional<Task> thisTask = this.getTaskById(id);
         if(thisTask.isPresent())
@@ -88,7 +114,6 @@ public class TaskService implements ITaskService {
         }
     }
 
-    @Override
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
@@ -104,7 +129,7 @@ public class TaskService implements ITaskService {
             }
             }
         } catch (IndexOutOfBoundsException e) {
-            throw new RuntimeException("Please add at least 1 task to perform midnight task reset");
+            throw new RuntimeException("No Active Tasks found");
         }
     }
 }

@@ -6,53 +6,40 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Title from './Title';
-
-// Generate Order Data
-function createData(id, date, name, shipTo, paymentMethod, amount) {
-  return { id, date, name, shipTo, paymentMethod, amount };
-}
-
-const rows = [
-  createData(
-    0,
-    '16 Mar, 2019',
-    'Elvis Presley',
-    'Tupelo, MS',
-    'VISA ⠀•••• 3719',
-    312.44,
-  ),
-  createData(
-    1,
-    '16 Mar, 2019',
-    'Paul McCartney',
-    'London, UK',
-    'VISA ⠀•••• 2574',
-    866.99,
-  ),
-  createData(2, '16 Mar, 2019', 'Tom Scholz', 'Boston, MA', 'MC ⠀•••• 1253', 100.81),
-  createData(
-    3,
-    '16 Mar, 2019',
-    'Michael Jackson',
-    'Gary, IN',
-    'AMEX ⠀•••• 2000',
-    654.39,
-  ),
-  createData(
-    4,
-    '15 Mar, 2019',
-    'Bruce Springsteen',
-    'Long Branch, NJ',
-    'VISA ⠀•••• 5919',
-    212.79,
-  ),
-];
+import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 function preventDefault(event) {
   event.preventDefault();
 }
 
 export default function Orders() {
+
+    const [tasks, setTasks] = useState([]);
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        loadTasks();
+    }, []);
+    const loadTasks=async ()=> {
+            const result = await fetch("http://localhost:9192/api/v1/tasks/my-tasks", {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        navigate('/');
+                        throw new Error('Please Login');
+                    }
+                })
+                .then(data => setTasks(data))
+                .catch(error => console.error(error));
+    }
+
   return (
     <React.Fragment>
       <Title>Recent Orders</Title>
@@ -67,13 +54,13 @@ export default function Orders() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+          {tasks.map((row) => (
             <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>{row.name}</TableCell>
-              <TableCell>{row.shipTo}</TableCell>
-              <TableCell>{row.paymentMethod}</TableCell>
-              <TableCell align="right">{`$${row.amount}`}</TableCell>
+              <TableCell>{row.taskName}</TableCell>
+              <TableCell>{row.spentTime}</TableCell>
+              <TableCell>{row.startTime}</TableCell>
+              <TableCell>{row.complete}</TableCell>
+              <TableCell align="right">{`$${row.active}`}</TableCell>
             </TableRow>
           ))}
         </TableBody>

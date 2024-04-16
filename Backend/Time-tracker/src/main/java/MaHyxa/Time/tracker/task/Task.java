@@ -1,13 +1,15 @@
-package MaHyxa.Time.tracker.model;
+package MaHyxa.Time.tracker.task;
 
+import MaHyxa.Time.tracker.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Task {
 
@@ -19,7 +21,7 @@ public class Task {
     private String taskName;
 
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "user_id")
     private User user;
 
     private Long spentTime;

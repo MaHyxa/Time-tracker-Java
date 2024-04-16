@@ -30,7 +30,7 @@ const defaultTheme = createTheme();
 
 export default function SignIn() {
 
-    const [nickname, setNickname] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigate = useNavigate()
     const [error, setError] = useState(null)
@@ -38,21 +38,28 @@ export default function SignIn() {
 
     const handleSubmit=(e)=>{
         e.preventDefault()
-        if(password.length<1 || nickname.length<1){
+        const user = {email, password}
+        if(password.length<1 || email.length<1){
             setError('Please set all required fields')
             return
         }
-        fetch(`http://localhost:9192/api/user/${nickname}`).then(async res => {
-            if (res.status === 201) {
-                setError('User successfully created. You will be redirected to Login Page in 3 seconds')
-                navigate('/')
-            }
-            if (res.status === 302) {
-                setError('This user already exist.')
+        fetch("http://localhost:9192/api/v1/auth/authenticate", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(user)
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
             } else {
-                setError('Something went wrong. Please try again.')
+                throw new Error('Login failed');
             }
         })
+            .then(res => {
+                localStorage.setItem('jwtToken', res.access_token);
+                navigate('/my-tasks')})
+            .catch(error => {
+                console.error(error);
+            });
     }
 
     return (
@@ -83,8 +90,8 @@ export default function SignIn() {
                             name="nickname"
                             autoComplete="nickname"
                             autoFocus
-                            value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                         <TextField
                             margin="normal"
