@@ -35,7 +35,7 @@ function timeout(delay) {
 
 
 const defaultTheme = createTheme();
-export default function Sign_In() {
+export default function SignIn() {
 
     const [name, setName] = useState('')
     const [lastname, setLastname] = useState('')

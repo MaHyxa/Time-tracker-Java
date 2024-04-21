@@ -1,6 +1,6 @@
 import './App.css';
 import Login from "./component/Login";
-import Sign_In from "./component/Sign in";
+import SignIn from "./component/Sign in";
 import Tasks from "./component/Tasks"
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 
@@ -10,7 +10,7 @@ const router = createBrowserRouter([{
 },
     {
         path: '/register',
-        element: <Sign_In/>
+        element: <SignIn/>
     },
     {
         path: '/my-tasks',

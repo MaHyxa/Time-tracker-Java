@@ -18,7 +18,7 @@ public class TaskResponse {
 
     private Long startTime;
 
-    private boolean complete;
+    private boolean isComplete;
 
     private boolean isActive;
 }

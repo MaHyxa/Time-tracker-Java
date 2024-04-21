@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
+import {styled, createTheme, ThemeProvider} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -9,7 +9,7 @@ import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import Container from '@mui/material/Container';
+import AddIcon from '@mui/icons-material/Add';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
@@ -18,6 +18,10 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { mainListItems } from './listItems';
 import Orders from './Orders';
 import {useNavigate} from "react-router-dom";
+import Button from "@mui/material/Button";
+import {Container} from "@mui/material";
+import NewTask from "./New Task";
+import {useState} from "react";
 
 function Copyright(props) {
     return (
@@ -31,6 +35,16 @@ function Copyright(props) {
         </Typography>
     );
 }
+
+const StyledBox = styled(Box)(({ theme }) => ({
+    maxWidth: `calc(100% - 20px)`, // Adjusted width with a 10px gap from each side
+    margin: '0 10px', // 10px gap on both left and right sides
+}));
+
+export const useGlobalState = () => {
+    const [update, setUpdate] = useState(false);
+    return { update, setUpdate };
+};
 
 const drawerWidth = 240;
 
@@ -78,17 +92,40 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: "#06be06",
+            dark: "#14ae17",
+        },
+        secondary: {
+            main: "#f44336",
+        },
+    },
+});
 
 const defaultTheme = createTheme();
 
 export default function Dashboard() {
+
     const [open, setOpen] = React.useState(true);
     const toggleDrawer = () => {
         setOpen(!open);
     };
+
+    const [openNewTask, setOpenNewTask] = React.useState(false);
+    const toggleNewTask = () => {
+        setOpenNewTask(!openNewTask);
+    };
     const navigate = useNavigate()
 
-    const handleSubmit=(e)=>{
+    //This fkin function get fkin value from fkin child class and refresh fkin task list!
+    const [update, setUpdate] = useState(true);
+    const updateTasks = () => {
+        setUpdate(!update);
+    };
+
+    const handleLogout=(e)=>{
         e.preventDefault()
         fetch("http://localhost:9192/api/v1/auth/logout", {
             method: 'GET',
@@ -137,7 +174,7 @@ export default function Dashboard() {
                         >
                             Time Tracker
                         </Typography>
-                        <Link color="inherit" href="#" onClick={handleSubmit}>
+                        <Link color="inherit" href="#" onClick={handleLogout}>
                             Logout
                         </Link>
                     </Toolbar>
@@ -187,12 +224,39 @@ export default function Dashboard() {
                     }}
                 >
                     <Toolbar />
+                    <Button sx={{
+                        width: 140,
+                        height: 50,
+                        borderRadius: 4,
+                        bgcolor: theme.palette.primary.main,
+                        color: "white",
+                        textTransform: "none",
+                        fontSize: "13pt",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
+                        position: "relative",
+                        top: "20px",
+                        left: "30px",
+                        "&:hover": {
+                            bgcolor: theme.palette.primary.dark,
+                        },
+                    }} variant="contained" onClick={toggleNewTask} startIcon={<AddIcon />}
+                    >
+                        New task
+                    </Button>
+                    {openNewTask && (
+                        <StyledBox sx={{ mt: 4, mb: 4 }}>
+                            <NewTask update={updateTasks} taskWindow={toggleNewTask}/>
+                        </StyledBox>
+                    )}
                     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
                         <Grid container spacing={3}>
                             {/* Recent Orders */}
                             <Grid item xs={12}>
                                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                                    <Orders />
+                                    <Orders update={update} />
                                 </Paper>
                             </Grid>
                         </Grid>

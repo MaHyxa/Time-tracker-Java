@@ -1,15 +1,18 @@
 package MaHyxa.Time.tracker.task;
 
 import MaHyxa.Time.tracker.user.User;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,13 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TaskService {
 
-
     private final TaskRepository taskRepository;
-
-
-    public Optional<Task> getTaskById(Long id) {
-        return taskRepository.findById(id);
-    }
 
 
     public List<TaskResponse> getAllTasksByUserId(Principal connectedUser) {
@@ -33,14 +30,14 @@ public class TaskService {
 
         var userTasks = taskRepository.findAllUserTasks(user.getId());
         if (userTasks.isEmpty())
-            return null;
+            return Collections.emptyList();
         List<TaskResponse> userTaskResponse = new ArrayList<>();
 
         userTasks.forEach(task -> {
             var taskResponse = TaskResponse.builder()
                     .id(task.getId())
                     .taskName(task.getTaskName())
-                    .complete(task.isComplete())
+                    .isComplete(task.isComplete())
                     .startTime(task.getStartTime())
                     .spentTime(task.getSpentTime())
                     .isActive(task.isActive())
@@ -61,6 +58,7 @@ public class TaskService {
         var task = Task.builder()
                 .taskName(taskName)
                 .user(user)
+                .createdAt(LocalDateTime.now())
                 .startTime(0L)
                 .spentTime(0L)
                 .build();
@@ -68,68 +66,67 @@ public class TaskService {
     }
 
 
-    public Task startTime(Long id) throws ChangeSetPersister.NotFoundException {
-        Optional<Task> thisTask = this.getTaskById(id);
-        if(thisTask.isPresent())
-        {
-            Task updatedTask = thisTask.get();
-            updatedTask.setStartTime(System.nanoTime());
-            updatedTask.setActive(true);
-            return taskRepository.save(updatedTask);
-        }
-        else {
-            throw new ChangeSetPersister.NotFoundException();
-        }
-    }
-
-    public Task stopTime(Long id) throws ChangeSetPersister.NotFoundException {
-        Optional<Task> thisTask = this.getTaskById(id);
-        if(thisTask.isPresent())
-        {
-            Task updatedTask = thisTask.get();
-            updatedTask.setSpentTime(updatedTask.getSpentTime() + System.nanoTime() - updatedTask.getStartTime());
-            updatedTask.setActive(false);
-            return taskRepository.save(updatedTask);
-        }
-        else {
-            throw new ChangeSetPersister.NotFoundException();
-        }
-    }
-
-
-    public Task complete(Long id) throws ChangeSetPersister.NotFoundException {
-        Optional<Task> thisTask = this.getTaskById(id);
-        if(thisTask.isPresent())
-        {
-            Task updatedTask = thisTask.get();
-            if (updatedTask.isActive()) {
-                updatedTask.setSpentTime(updatedTask.getSpentTime() + System.nanoTime() - updatedTask.getStartTime());
-                updatedTask.setActive(false);
+    private TaskResponse updateTask(JsonNode requestBody, Principal connectedUser, boolean setActive, boolean setComplete) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody.get("id").asLong());
+        long currentTime = System.currentTimeMillis();
+        if (!setComplete) {
+            if (setActive) {
+                //start
+                patchedTask.setActive(true);
+                patchedTask.setStartTime(currentTime);
+            } else {
+                //stop
+                patchedTask.setActive(false);
+                patchedTask.setSpentTime(patchedTask.getSpentTime() + currentTime - patchedTask.getStartTime());
             }
-            updatedTask.setComplete(true);
-            return taskRepository.save(updatedTask);
         }
-        else {
-            throw new ChangeSetPersister.NotFoundException();
+        //complete
+        if (setComplete && !setActive) {
+            patchedTask.setComplete(true);
         }
+        taskRepository.save(patchedTask);
+        return TaskResponse.builder()
+                .id(patchedTask.getId())
+                .taskName(patchedTask.getTaskName())
+                .isComplete(patchedTask.isComplete())
+                .startTime(patchedTask.getStartTime())
+                .spentTime(patchedTask.getSpentTime())
+                .isActive(patchedTask.isActive())
+                .build();
     }
 
-    public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
+    public TaskResponse startTime(JsonNode requestBody, Principal connectedUser) {
+        return updateTask(requestBody, connectedUser, true, false);
+    }
+
+    public TaskResponse stopTime(JsonNode requestBody, Principal connectedUser) {
+        return updateTask(requestBody, connectedUser, false, false);
+    }
+
+    public TaskResponse completeTask(JsonNode requestBody, Principal connectedUser) {
+        return updateTask(requestBody, connectedUser, false, true);
+    }
+
+
+    public void deleteTask(JsonNode requestBody, Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody.get("id").asLong());
+        taskRepository.delete(patchedTask);
     }
 
 
     //Midnight Task reset
-    @Scheduled(cron = "59 59 23 * * *")
-    public void stopAllActiveTasks() throws ChangeSetPersister.NotFoundException {
-        try {
-            if(taskRepository.findActiveTasks().isPresent()) {
-                for (int i = 0; i < taskRepository.findActiveTasks().stream().count(); i++) {
-                    stopTime(taskRepository.findActiveTasks().get().get(i));
-            }
-            }
-        } catch (IndexOutOfBoundsException e) {
-            throw new RuntimeException("No Active Tasks found");
-        }
-    }
+//    @Scheduled(cron = "59 59 23 * * *")
+//    public void stopAllActiveTasks() throws ChangeSetPersister.NotFoundException {
+//        try {
+//            if(taskRepository.findActiveTasks().isPresent()) {
+//                for (int i = 0; i < taskRepository.findActiveTasks().stream().count(); i++) {
+//                    stopTime(taskRepository.findActiveTasks().get().get(i));
+//            }
+//            }
+//        } catch (IndexOutOfBoundsException e) {
+//            throw new RuntimeException("No Active Tasks found");
+//        }
+//    }
 }

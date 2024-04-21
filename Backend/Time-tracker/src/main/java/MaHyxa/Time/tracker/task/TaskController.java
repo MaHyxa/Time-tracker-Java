@@ -1,28 +1,35 @@
 package MaHyxa.Time.tracker.task;
 
-import MaHyxa.Time.tracker.auth.AuthenticationRequest;
-import jakarta.validation.Valid;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/v1/tasks")
 @RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
+    private long spamPrevent = 0;
 
     @PostMapping("/new")
     public ResponseEntity<?> createTask(@RequestBody String taskName, Principal connectedUser) {
-        taskService.createTask(taskName, connectedUser);
-        return ResponseEntity.ok().build();
+        if(Instant.now().getEpochSecond() > spamPrevent)
+        {
+            taskService.createTask(taskName, connectedUser);
+            //3 seconds delay between requests
+            spamPrevent = Instant.now().getEpochSecond() + 3;
+            return ResponseEntity.ok().build();
+        }
+        else {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
     @GetMapping("/my-tasks")
@@ -30,40 +37,24 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
     }
 
-    @GetMapping("my-tasks/{id}")
-    public ResponseEntity<TaskResponse> getTaskById(@RequestBody TaskResponse request, Principal connectedUser) throws ChangeSetPersister.NotFoundException {
-        taskService.getTaskById(request.getId());
-        return null;
-//        if(task.isPresent())
-//        {
-//            return ResponseEntity.ok().build();
-//        }
-//        else {
-//            throw new ChangeSetPersister.NotFoundException();
-//        }
+    @PatchMapping("my-tasks/startTask")
+    public ResponseEntity<TaskResponse> startTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+        return ResponseEntity.ok(taskService.startTime(requestBody, connectedUser));
     }
 
-    @PutMapping("my-tasks/{id}/start")
-    public ResponseEntity<Task> startTask(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Task changetask = taskService.startTime(id);
-        return ResponseEntity.ok(changetask);
+    @PatchMapping("my-tasks/stopTask")
+    public ResponseEntity<TaskResponse> stopTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+        return ResponseEntity.ok(taskService.stopTime(requestBody, connectedUser));
     }
 
-    @PutMapping("my-tasks/{id}/stop")
-    public ResponseEntity<Task> stopTask(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Task changetask = taskService.stopTime(id);
-        return ResponseEntity.ok(changetask);
+    @PatchMapping("my-tasks/completeTask")
+    public ResponseEntity<TaskResponse> completeTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+        return ResponseEntity.ok(taskService.completeTask(requestBody, connectedUser));
     }
 
-    @PutMapping("my-tasks/{id}/complete")
-    public ResponseEntity<Task> completeTask(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        Task changetask = taskService.complete(id);
-        return ResponseEntity.ok(changetask);
-    }
-
-    @DeleteMapping("my-tasks/{id}/delete")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id){
-        taskService.deleteTask(id);
+    @DeleteMapping("my-tasks/deleteTask")
+    public ResponseEntity<Void> deleteTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+        taskService.deleteTask(requestBody, connectedUser);
         return ResponseEntity.noContent().build();
     }
 

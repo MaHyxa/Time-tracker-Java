@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 
 @Data
 @Builder
@@ -24,11 +26,13 @@ public class Task {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private LocalDateTime createdAt;
+
     private Long spentTime;
 
     private Long startTime;
 
-    private boolean complete;
+    private boolean isComplete;
 
     private boolean isActive;
 
