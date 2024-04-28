@@ -40,4 +40,9 @@ public class UserController {
         service.deleteUser(password, connectedUser);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/userStatistics")
+    public ResponseEntity<StatisticResponse> getStatistic(Principal connectedUser) {
+        return ResponseEntity.ok(service.getStatistic(connectedUser));
+    }
 }

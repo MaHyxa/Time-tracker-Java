@@ -32,6 +32,17 @@ function formatMilliseconds(milliseconds) {
     }
 }
 
+function formatDate(inputDate) {
+
+    const date = new Date(inputDate);
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString();
+
+    return `${day}/${month}/${year}`;
+}
+
 const Tasks = ({update}) => {
 
     const [tasks, setTasks] = useState([]);
@@ -130,16 +141,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
-        const data = {
-            id: id
-        };
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/startTask", {
             method: "PATCH",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(id)
         }).then(response => {
             if (response.ok) {
                 return response.json();
@@ -159,16 +167,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
-        const data = {
-            id: id
-        };
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/stopTask", {
             method: "PATCH",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(id)
         }).then(response => {
             if (response.ok) {
                 return response.json();
@@ -188,16 +193,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
-        const data = {
-            id: id
-        };
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/completeTask", {
             method: "PATCH",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(id)
         }).then(response => {
             if (response.ok) {
                 return response.json();
@@ -218,16 +220,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
-        const data = {
-            id: id
-        };
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/deleteTask", {
             method: "DELETE",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(id)
         }).then(response => {
             if (response.status === 204) {
                 tasks.splice(index, 1);
@@ -243,7 +242,9 @@ const Tasks = ({update}) => {
 
     return (
         <React.Fragment>
-            <Title>All Tasks</Title>
+            <Typography variant="h4" color={theme.palette.primary.blue} gutterBottom mt={1}>
+                All Tasks
+            </Typography>
             {isEmpty && (
                 <Box sx={{
                     mt: 4,
@@ -266,9 +267,9 @@ const Tasks = ({update}) => {
                             <Typography variant="body2" color={theme.palette.secondary.red}
                                         sx={{
                                             mt: 2,
-                                            ml: '90%'
+                                            ml: '85%'
                                         }} gutterBottom>
-                                Created on: {item.id}
+                                Created on: {formatDate(item.createdAt)}
                             </Typography>
                             <ListItem
                                 onMouseEnter={() => setIsHovered(index)}
@@ -308,7 +309,7 @@ const Tasks = ({update}) => {
                                         <RemoveCircleIcon style={{fontSize: '115%'}}/>
                                     </IconButton>
                                 )}
-                                {item.startTime === 0 && !item.active && !item.complete && (
+                                {item.spentTime === 0 && !item.active && !item.complete && (
                                     <ListItemButton
                                         sx={{
                                             ...startButtonStyle,
@@ -321,7 +322,7 @@ const Tasks = ({update}) => {
                                     </ListItemButton>
                                 )}
 
-                                {item.startTime > 0 && !item.active && !item.complete && (
+                                {item.spentTime > 0 && !item.active && !item.complete && (
                                     <ListItemButton
                                         sx={{
                                             ...startButtonStyle,
@@ -377,8 +378,8 @@ const Tasks = ({update}) => {
                                             fontWeight: "bold",
                                             position: "absolute",
                                             right: "8%",
-                                            top: "50%", // Set top to 50%
-                                            transform: "translate(13%, -50%)" // Translate back by -50% of its width and height
+                                            top: "50%",
+                                            transform: "translate(13%, -50%)"
                                         }
                                     }}
                                 />

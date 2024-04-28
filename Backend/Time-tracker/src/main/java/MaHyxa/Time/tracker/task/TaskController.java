@@ -33,27 +33,27 @@ public class TaskController {
     }
 
     @GetMapping("/my-tasks")
-    public ResponseEntity<List<TaskResponse>> getAllTasksByUserId(Principal connectedUser) {
+    public ResponseEntity<List<Task>> getAllTasksByUserId(Principal connectedUser) {
         return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
     }
 
     @PatchMapping("my-tasks/startTask")
-    public ResponseEntity<TaskResponse> startTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+    public ResponseEntity<Task> startTask(@RequestBody Long requestBody, Principal connectedUser) {
         return ResponseEntity.ok(taskService.startTime(requestBody, connectedUser));
     }
 
     @PatchMapping("my-tasks/stopTask")
-    public ResponseEntity<TaskResponse> stopTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+    public ResponseEntity<Task> stopTask(@RequestBody Long requestBody, Principal connectedUser) {
         return ResponseEntity.ok(taskService.stopTime(requestBody, connectedUser));
     }
 
     @PatchMapping("my-tasks/completeTask")
-    public ResponseEntity<TaskResponse> completeTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+    public ResponseEntity<Task> completeTask(@RequestBody Long requestBody, Principal connectedUser) {
         return ResponseEntity.ok(taskService.completeTask(requestBody, connectedUser));
     }
 
     @DeleteMapping("my-tasks/deleteTask")
-    public ResponseEntity<Void> deleteTask(@RequestBody JsonNode requestBody, Principal connectedUser) {
+    public ResponseEntity<Void> deleteTask(@RequestBody Long requestBody, Principal connectedUser) {
         taskService.deleteTask(requestBody, connectedUser);
         return ResponseEntity.noContent().build();
     }

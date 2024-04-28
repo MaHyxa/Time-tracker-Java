@@ -1,8 +1,7 @@
 package MaHyxa.Time.tracker.task;
 
+import MaHyxa.Time.tracker.task.taskSession.TaskSessionService;
 import MaHyxa.Time.tracker.user.User;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -24,61 +22,47 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
 
+    private final TaskSessionService taskSessionService;
 
-    public List<TaskResponse> getAllTasksByUserId(Principal connectedUser) {
+
+    public List<Task> getAllTasksByUserId(Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
 
         var userTasks = taskRepository.findAllUserTasks(user.getId());
         if (userTasks.isEmpty())
             return Collections.emptyList();
-        List<TaskResponse> userTaskResponse = new ArrayList<>();
 
-        userTasks.forEach(task -> {
-            var taskResponse = TaskResponse.builder()
-                    .id(task.getId())
-                    .taskName(task.getTaskName())
-                    .isComplete(task.isComplete())
-                    .startTime(task.getStartTime())
-                    .spentTime(task.getSpentTime())
-                    .isActive(task.isActive())
-                    .build();
-            userTaskResponse.add(taskResponse);
-        });
-        return userTaskResponse;
-    }
-
-
-    public Optional<List<Long>> getAllActiveTasksIds() {
-        return taskRepository.findActiveTasks();
+        return new ArrayList<>(userTasks);
     }
 
 
     public void createTask(String taskName, Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        var task = Task.builder()
+        Task task = Task.builder()
                 .taskName(taskName)
                 .user(user)
                 .createdAt(LocalDateTime.now())
-                .startTime(0L)
                 .spentTime(0L)
                 .build();
         taskRepository.save(task);
     }
 
 
-    private TaskResponse updateTask(JsonNode requestBody, Principal connectedUser, boolean setActive, boolean setComplete) {
+    private Task updateTask(Long requestBody, Principal connectedUser, boolean setActive, boolean setComplete) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody.get("id").asLong());
-        long currentTime = System.currentTimeMillis();
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody);
+        if(patchedTask.isComplete())
+            return patchedTask;
+
         if (!setComplete) {
             if (setActive) {
                 //start
                 patchedTask.setActive(true);
-                patchedTask.setStartTime(currentTime);
+                taskSessionService.startSession(patchedTask);
             } else {
                 //stop
                 patchedTask.setActive(false);
-                patchedTask.setSpentTime(patchedTask.getSpentTime() + currentTime - patchedTask.getStartTime());
+                patchedTask.setSpentTime(patchedTask.getSpentTime() + taskSessionService.stopSession(patchedTask));
             }
         }
         //complete
@@ -86,32 +70,25 @@ public class TaskService {
             patchedTask.setComplete(true);
         }
         taskRepository.save(patchedTask);
-        return TaskResponse.builder()
-                .id(patchedTask.getId())
-                .taskName(patchedTask.getTaskName())
-                .isComplete(patchedTask.isComplete())
-                .startTime(patchedTask.getStartTime())
-                .spentTime(patchedTask.getSpentTime())
-                .isActive(patchedTask.isActive())
-                .build();
+        return patchedTask;
     }
 
-    public TaskResponse startTime(JsonNode requestBody, Principal connectedUser) {
+    public Task startTime(Long requestBody, Principal connectedUser) {
         return updateTask(requestBody, connectedUser, true, false);
     }
 
-    public TaskResponse stopTime(JsonNode requestBody, Principal connectedUser) {
+    public Task stopTime(Long requestBody, Principal connectedUser) {
         return updateTask(requestBody, connectedUser, false, false);
     }
 
-    public TaskResponse completeTask(JsonNode requestBody, Principal connectedUser) {
+    public Task completeTask(Long requestBody, Principal connectedUser) {
         return updateTask(requestBody, connectedUser, false, true);
     }
 
 
-    public void deleteTask(JsonNode requestBody, Principal connectedUser) {
+    public void deleteTask(Long requestBody, Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody.get("id").asLong());
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody);
         taskRepository.delete(patchedTask);
     }
 

@@ -68,4 +68,13 @@ public class UserService {
             repository.deleteById(user.getId());
         }
     }
+
+    public StatisticResponse getStatistic(Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+
+        return StatisticResponse.builder()
+                .totalUserTasks(repository.findAllTasksByUser(user.getEmail()))
+                .activeUserTasks(repository.findAllActiveTasksByUser(user.getEmail()))
+                .build();
+    }
 }
