@@ -1,7 +1,8 @@
 import './App.css';
 import Login from "./component/Login";
 import SignIn from "./component/Sign in";
-import Tasks from "./component/Tasks"
+import TaskPage from "./component/TaskPage"
+import UserInfo from "./component/UserInfo"
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 
 const router = createBrowserRouter([{
@@ -13,8 +14,12 @@ const router = createBrowserRouter([{
         element: <SignIn/>
     },
     {
+        path: '/my-info',
+        element: <UserInfo/>
+    },
+    {
         path: '/my-tasks',
-        element: <Tasks/>
+        element: <TaskPage/>
     }])
 
 

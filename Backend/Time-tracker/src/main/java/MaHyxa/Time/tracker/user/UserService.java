@@ -1,5 +1,6 @@
 package MaHyxa.Time.tracker.user;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,12 +34,27 @@ public class UserService {
         repository.save(user);
     }
 
-    public void changeUserDetails(ChangeUserDetailsRequest request, Principal connectedUser) {
+    public UserResponse getUser(Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        user.setFirstname(request.getNewName());
-        user.setLastname(request.getNewLastname());
-        user.setEmail(request.getNewEmail());
+        return UserResponse.builder()
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail())
+                .build();
+    }
+
+
+    public UserResponse changeUserDetails(JsonNode requestBody, Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        user.setFirstname(requestBody.get("firstname").asText());
+        user.setLastname(requestBody.get("lastname").asText());
+        user.setEmail(requestBody.get("email").asText());
         repository.save(user);
+        return UserResponse.builder()
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail())
+                .build();
     }
 
     public void deleteUser(String password, Principal connectedUser) {

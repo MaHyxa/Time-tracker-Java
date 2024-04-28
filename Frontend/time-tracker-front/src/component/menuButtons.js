@@ -8,24 +8,32 @@ import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import Divider from "@mui/material/Divider";
 
-export const mainListItems = (
+export const mainListItems = ({ navigate }) => {
+    const userInfo = () => {
+        navigate('/my-info');
+    };
+    const userTasks = () => {
+        navigate('/my-tasks');
+    };
+
+    return (
   <React.Fragment>
-    <ListItemButton>
+    <ListItemButton onClick={userInfo}>
       <ListItemIcon>
-        <DashboardIcon />
+          <PeopleIcon />
       </ListItemIcon>
       <ListItemText primary="User Details" />
     </ListItemButton>
       <Divider sx={{ my: 1 }} />
-    <ListItemButton>
+    <ListItemButton onClick={userTasks}>
       <ListItemIcon>
-        <ShoppingCartIcon />
+          <DashboardIcon />
       </ListItemIcon>
       <ListItemText primary="All Tasks" />
     </ListItemButton>
     <ListItemButton>
       <ListItemIcon>
-        <PeopleIcon />
+          <ShoppingCartIcon />
       </ListItemIcon>
       <ListItemText primary="Active Tasks" />
     </ListItemButton>
@@ -33,7 +41,8 @@ export const mainListItems = (
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>
-      <ListItemText primary="Reports" />
+      <ListItemText primary="Statistics" />
     </ListItemButton>
   </React.Fragment>
-);
+    );
+};

@@ -1,4 +1,4 @@
-package MaHyxa.Time.tracker.auth;
+package MaHyxa.Time.tracker.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationRequest {
+public class UserResponse {
 
-  private String email;
-  private String password;
+    private String firstname;
+
+    private String lastname;
+
+    private String email;
 }

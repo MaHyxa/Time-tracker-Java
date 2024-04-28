@@ -21,4 +21,6 @@ public class TaskResponse {
     private boolean isComplete;
 
     private boolean isActive;
+
+
 }
