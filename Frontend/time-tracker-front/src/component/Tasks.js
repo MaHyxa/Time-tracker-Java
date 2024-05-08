@@ -1,69 +1,28 @@
 import * as React from 'react';
-import Title from './Title';
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemButton from "@mui/material/ListItemButton";
-import {createTheme} from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircle"
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 
-function formatMilliseconds(milliseconds) {
-    const seconds = Math.floor(milliseconds / 1000);
-    const days = Math.floor(seconds / (3600 * 24));
-    const remainingHours = Math.floor((seconds % (3600 * 24)) / 3600);
-    const remainingMinutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
+import {theme, formatDate, formatMilliseconds, isTokenExpired} from './PageTemplate';
+import Grid from "@mui/material/Grid";
 
-    const formattedDays = String(days);
-    const formattedHours = String(remainingHours).padStart(2, '0');
-    const formattedMinutes = String(remainingMinutes).padStart(2, '0');
-    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-
-    if (milliseconds < 86400000) {
-        return `${formattedHours}:${formattedMinutes}:${formattedSeconds}s`;
-    } else {
-        return `${formattedDays} Days ${formattedHours}:${formattedMinutes}:${formattedSeconds}s`;
-    }
-}
-
-function formatDate(inputDate) {
-
-    const date = new Date(inputDate);
-
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear().toString();
-
-    return `${day}/${month}/${year}`;
-}
 
 const Tasks = ({update}) => {
 
     const [tasks, setTasks] = useState([]);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const [isEmpty, setIsEmpty] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [refresh, setRefresh] = useState(false);
 
-    const theme = createTheme({
-        palette: {
-            primary: {
-                main: "#06be06",
-                dark: "#14ae17",
-                blue: "#1976d2",
-                darkblue: "#1664b0",
-            },
-            secondary: {
-                main: "#ed4135",
-                red: "#d23a2e",
-            },
-        },
-    });
 
     const startButtonStyle = {
         minWidth: '7%',
@@ -110,7 +69,7 @@ const Tasks = ({update}) => {
     //any changes in "update" will trigger useEffect
     useEffect(() => {
         loadTasks();
-    }, [update]);
+    }, [update, refresh]);
     const loadTasks = async () => {
         const result = await fetch("http://localhost:9192/api/v1/tasks/my-tasks", {
             method: 'GET',
@@ -141,6 +100,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
+
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
+        }
+
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/startTask", {
             method: "PATCH",
             headers: {
@@ -166,6 +132,12 @@ const Tasks = ({update}) => {
     const stopTimeCount = (id, e, index) => {
         if (e) {
             e.preventDefault();
+        }
+
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
         }
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/stopTask", {
             method: "PATCH",
@@ -193,6 +165,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
+
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
+        }
+
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/completeTask", {
             method: "PATCH",
             headers: {
@@ -220,6 +199,13 @@ const Tasks = ({update}) => {
         if (e) {
             e.preventDefault();
         }
+
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
+        }
+
         fetch("http://localhost:9192/api/v1/tasks/my-tasks/deleteTask", {
             method: "DELETE",
             headers: {
@@ -229,6 +215,7 @@ const Tasks = ({update}) => {
             body: JSON.stringify(id)
         }).then(response => {
             if (response.status === 204) {
+                setRefresh(!refresh);
                 tasks.splice(index, 1);
                 setTasks([...tasks]);
             } else {
@@ -242,7 +229,7 @@ const Tasks = ({update}) => {
 
     return (
         <React.Fragment>
-            <Typography variant="h4" color={theme.palette.primary.blue} gutterBottom mt={1}>
+            <Typography variant="h4" color={theme.palette.primary.blue} sx={{ textAlign: 'center' }} gutterBottom mt={1}>
                 All Tasks
             </Typography>
             {isEmpty && (
@@ -276,7 +263,7 @@ const Tasks = ({update}) => {
                                 onMouseLeave={() => setIsHovered(null)}
                                 sx={{
                                     '&:hover': {
-                                        backgroundColor: '#f2f2f2', // Change the background color on hover
+                                        backgroundColor: '#f2f2f2',
                                     },
                                     py: 1,
                                     minHeight: 70,
@@ -392,38 +379,59 @@ const Tasks = ({update}) => {
                                     justifyContent: "center"
                                 }}/>}
                             </ListItem>
-                            {!item.active && (
-                                <ListItemText primary={
-                                    <>
-                                        <Typography component="span">
-                                            {"You've spent "}
+                            <Grid container spacing={1} mb={3}>
+                                <Grid item xs={6}>
+                                    {!item.active && (
+                                        <ListItemText primary={
+                                            <>
+                                                <Typography component="span">
+                                                    {"You've spent "}
+                                                </Typography>
+                                                <Typography component="span" sx={{
+                                                    color: "#fd5454",
+                                                    fontWeight: "bold"
+                                                }}>
+                                                    {formatMilliseconds(item.spentTime)}
+                                                </Typography>
+                                                <Typography component="span">
+                                                    {" on this task."}
+                                                </Typography>
+                                            </>
+                                        } primaryTypographyProps={{
+                                            sx: {
+                                                position: "relative",
+                                                mt: 1,
+                                                left: "6%"
+                                            }
+                                        }}>
+                                        </ListItemText>
+                                    )}
+                                    {item.active && (
+                                        <ListItemText
+                                            primary={`Task is in progress. Good luck!`}
+                                            primaryTypographyProps={{
+                                                sx: {
+                                                    position: "relative",
+                                                    mt: 1,
+                                                    left: "6%"
+                                                }
+                                            }}>
+                                        </ListItemText>
+                                    )}
+                                </Grid>
+                                <Grid item xs={6}>
+                                    {!item.active && item.complete && (
+                                        <Typography component="span" variant="body2" color={theme.palette.primary.dark}
+                                                    sx={{
+                                                        position: "relative",
+                                                        mt: 5,
+                                                        left: "68%"
+                                                    }} >
+                                            Completed on: {formatDate(item.completedAt)}
                                         </Typography>
-                                        <Typography component="span" sx={{color: "#fd5454", fontWeight: "bold"}}>
-                                            {formatMilliseconds(item.spentTime)}
-                                        </Typography>
-                                        <Typography component="span">
-                                            {" on this task."}
-                                        </Typography>
-                                    </>
-                                } primaryTypographyProps={{
-                                    sx: {
-                                        position: "relative",
-                                        marginBottom: 2,
-                                        left: "6%"
-                                    }
-                                }}>
-                                </ListItemText>
-                            )}
-                            {item.active && (
-                                <ListItemText primary={`Task is in progress. Good luck!`} primaryTypographyProps={{
-                                    sx: {
-                                        position: "relative",
-                                        marginBottom: 2,
-                                        left: "6%"
-                                    }
-                                }}>
-                                </ListItemText>
-                            )}
+                                    )}
+                                </Grid>
+                            </Grid>
                         </div>
                     ))}
                 </List>

@@ -31,11 +31,13 @@ public class Task {
     private User user;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "task")
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<TaskSession> taskSession;
 
     private LocalDateTime createdAt;
+
+    private LocalDateTime completedAt;
 
     private Long spentTime;
 

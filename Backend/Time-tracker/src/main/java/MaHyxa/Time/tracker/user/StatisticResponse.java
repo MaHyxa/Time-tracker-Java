@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatisticResponse {
-    private int totalUserTasks;
-    private int activeUserTasks;
-    private long totalTimeSpent;
-    private int longestTask;
+    private Integer totalUserTasks;
+    private Integer activeUserTasks;
+    private Integer completeUserTasks;
+    private Long totalTimeSpent;
+    private Long longestTask;
 
 }

@@ -31,11 +31,11 @@ public class User implements UserDetails {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", orphanRemoval = true)
   @ToString.Exclude
   private List<Token> tokens;
 
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", orphanRemoval = true)
   @ToString.Exclude
   private List<Task> tasks;
 

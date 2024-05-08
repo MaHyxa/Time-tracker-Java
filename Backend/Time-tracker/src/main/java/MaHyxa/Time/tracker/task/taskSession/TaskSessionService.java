@@ -5,8 +5,10 @@ import MaHyxa.Time.tracker.task.Task;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +21,13 @@ public class TaskSessionService {
         if (taskSessionRepository.findByTaskIdAndIsActiveTrue(task.getId()) == null) {
             TaskSession taskSession = TaskSession.builder()
                     .startTime(LocalDateTime.now())
-                    .stopTime(LocalDateTime.now())
+                    .stopTime(null)
                     .isActive(true)
                     .task(task)
                     .duration(0L)
                     .build();
             taskSessionRepository.save(taskSession);
-        } else stopSession(task);
+        }
     }
 
     public Long stopSession(Task task) {
@@ -37,10 +39,12 @@ public class TaskSessionService {
             taskSessionRepository.save(taskSession);
             return taskSession.getDuration();
         } else {
-            startSession(task);
-            stopSession(task);
             return 0L;
         }
+    }
+
+    public List<TaskSession> selectSessionsByDate(String startDate, String endDate, Long taskId) {
+        return taskSessionRepository.selectSessionsByDate(Date.valueOf(startDate), Date.valueOf(endDate), taskId);
     }
 
 }

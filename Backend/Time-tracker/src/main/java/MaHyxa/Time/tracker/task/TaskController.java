@@ -58,4 +58,9 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/my-tasks/findByDates")
+    public ResponseEntity<List<TaskReportResponse>> findTasksByDates(@RequestBody JsonNode dateRange, Principal connectedUser) {
+        return ResponseEntity.ok(taskService.findTasksByDates(dateRange, connectedUser));
+    }
+
 }

@@ -3,10 +3,10 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import Divider from "@mui/material/Divider";
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
 
 export const mainListItems = ({ navigate }) => {
     const userInfo = () => {
@@ -15,6 +15,13 @@ export const mainListItems = ({ navigate }) => {
     const userTasks = () => {
         navigate('/my-tasks');
     };
+    const reports = () => {
+        navigate('/reports')
+    }
+
+    const stats = () => {
+        navigate('/my-stats')
+    }
 
     return (
   <React.Fragment>
@@ -31,13 +38,13 @@ export const mainListItems = ({ navigate }) => {
       </ListItemIcon>
       <ListItemText primary="All Tasks" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={reports}>
       <ListItemIcon>
-          <ShoppingCartIcon />
+          <QueryStatsIcon />
       </ListItemIcon>
-      <ListItemText primary="Active Tasks" />
+      <ListItemText primary="Summary Reports" />
     </ListItemButton>
-    <ListItemButton>
+    <ListItemButton onClick={stats}>
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>

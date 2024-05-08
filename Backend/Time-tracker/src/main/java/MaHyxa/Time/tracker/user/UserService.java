@@ -75,6 +75,9 @@ public class UserService {
         return StatisticResponse.builder()
                 .totalUserTasks(repository.findAllTasksByUser(user.getEmail()))
                 .activeUserTasks(repository.findAllActiveTasksByUser(user.getEmail()))
+                .completeUserTasks(repository.findAllCompleteTasksByUser(user.getEmail()))
+                .longestTask(repository.findLongestTaskByUser(user.getEmail()))
+                .totalTimeSpent(repository.findTasksTotalSpentTimeByUser(user.getEmail()))
                 .build();
     }
 }

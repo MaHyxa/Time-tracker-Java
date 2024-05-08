@@ -2,6 +2,7 @@ package MaHyxa.Time.tracker.task;
 
 import MaHyxa.Time.tracker.task.taskSession.TaskSessionService;
 import MaHyxa.Time.tracker.user.User;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,9 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.sql.Date;
 
 
 @Service
@@ -42,6 +42,7 @@ public class TaskService {
                 .taskName(taskName)
                 .user(user)
                 .createdAt(LocalDateTime.now())
+                .taskSession(Collections.emptyList())
                 .spentTime(0L)
                 .build();
         taskRepository.save(task);
@@ -68,6 +69,7 @@ public class TaskService {
         //complete
         if (setComplete && !setActive) {
             patchedTask.setComplete(true);
+            patchedTask.setCompletedAt(LocalDateTime.now());
         }
         taskRepository.save(patchedTask);
         return patchedTask;
@@ -90,6 +92,26 @@ public class TaskService {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
         Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody);
         taskRepository.delete(patchedTask);
+    }
+
+    public List<TaskReportResponse> findTasksByDates(JsonNode dateRange, Principal connectedUser) {
+        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+        String startDate = dateRange.get("startDate").asText().substring(0, 10);
+        String endDate = dateRange.get("endDate").asText().substring(0, 10);
+
+        List<TaskReportResponse> selectedTasksForReport = new ArrayList<>();
+
+        List<Task> selectedTasks = taskRepository.findTasksByDateRange(Date.valueOf(startDate), Date.valueOf(endDate), user.getId());
+
+        for (Task t: selectedTasks) {
+            TaskReportResponse trr = TaskReportResponse.builder()
+                    .task(t)
+                    .taskSessionList(taskSessionService.selectSessionsByDate(startDate, endDate, t.getId()))
+                    .build();
+            selectedTasksForReport.add(trr);
+        }
+
+        return selectedTasksForReport;
     }
 
 

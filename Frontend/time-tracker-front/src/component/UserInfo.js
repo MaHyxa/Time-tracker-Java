@@ -20,6 +20,7 @@ import {Container} from "@mui/material";
 import {useEffect, useState} from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import {isTokenExpired} from "./PageTemplate";
 
 function Copyright(props) {
     return (
@@ -189,6 +190,11 @@ export default function UserInfo() {
 
     const changeUserDetails = (e) => {
         e.preventDefault();
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
+        }
         const data = {
             firstname: user.firstname,
             lastname: user.lastname,
@@ -230,6 +236,11 @@ export default function UserInfo() {
 
     const changePassword = (e) => {
         e.preventDefault();
+        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
+            localStorage.removeItem('jwtToken');
+            navigate('/');
+            return;
+        }
         const password = {currentPassword, newPassword, confirmationPassword}
         if (currentPassword.length < 1 || newPassword.length < 1 || confirmationPassword.length < 1) {
             return
