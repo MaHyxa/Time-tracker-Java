@@ -23,6 +23,7 @@ public class Task {
     private Long id;
 
     @NotBlank(message = "Please name your task")
+    @Column(columnDefinition = "TEXT")
     private String taskName;
 
     @JsonIgnore

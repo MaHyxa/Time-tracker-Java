@@ -18,7 +18,7 @@ public class TaskSessionService {
 
 
     public void startSession(Task task) {
-        if (taskSessionRepository.findByTaskIdAndIsActiveTrue(task.getId()) == null) {
+        if (taskSessionRepository.findActiveSessionByTaskId(task.getId()) == null) {
             TaskSession taskSession = TaskSession.builder()
                     .startTime(LocalDateTime.now())
                     .stopTime(null)
@@ -31,7 +31,7 @@ public class TaskSessionService {
     }
 
     public Long stopSession(Task task) {
-        TaskSession taskSession = taskSessionRepository.findByTaskIdAndIsActiveTrue(task.getId());
+        TaskSession taskSession = taskSessionRepository.findActiveSessionByTaskId(task.getId());
         if (!(taskSession == null)) {
             taskSession.setStopTime(LocalDateTime.now());
             taskSession.setActive(false);
@@ -41,6 +41,11 @@ public class TaskSessionService {
         } else {
             return 0L;
         }
+    }
+
+    public void deleteSession(Task task) {
+        TaskSession taskSession = taskSessionRepository.findActiveSessionByTaskId(task.getId());
+        taskSessionRepository.delete(taskSession);
     }
 
     public List<TaskSession> selectSessionsByDate(String startDate, String endDate, Long taskId) {

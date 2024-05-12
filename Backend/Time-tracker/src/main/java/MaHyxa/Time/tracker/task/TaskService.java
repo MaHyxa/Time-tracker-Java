@@ -116,16 +116,11 @@ public class TaskService {
 
 
     //Midnight Task reset
-//    @Scheduled(cron = "59 59 23 * * *")
-//    public void stopAllActiveTasks() throws ChangeSetPersister.NotFoundException {
-//        try {
-//            if(taskRepository.findActiveTasks().isPresent()) {
-//                for (int i = 0; i < taskRepository.findActiveTasks().stream().count(); i++) {
-//                    stopTime(taskRepository.findActiveTasks().get().get(i));
-//            }
-//            }
-//        } catch (IndexOutOfBoundsException e) {
-//            throw new RuntimeException("No Active Tasks found");
-//        }
-//    }
+    @Scheduled(cron = "59 59 23 * * *")
+    public void stopAllActiveTasks() {
+        taskRepository.findAllByIsActiveTrue().forEach(task -> {
+            taskRepository.deactivateActiveTasks(task.getId());
+            taskSessionService.deleteSession(task);
+        });
+    }
 }
