@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="time-tracker@localhost" uuid="79a9c8a4-5e28-4375-96e7-53263b3594d3">
+    <data-source source="LOCAL" name="time_tracker@localhost" uuid="79a9c8a4-5e28-4375-96e7-53263b3594d3">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3306/time-tracker</jdbc-url>
+      <jdbc-url>jdbc:mysql://localhost:3308/time_tracker</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

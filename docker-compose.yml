@@ -1,0 +1,41 @@
+services:
+  mysql:
+    container_name: mysql-time-tracker
+    image: mysql
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: time_tracker
+    volumes:
+      - type: bind
+        source: D:\TestDatabase
+        target: /var/lib/mysql
+    ports:
+      - 3308:3306
+    networks:
+      - time-tracker-network
+    restart: unless-stopped
+
+  time-tracker-api:
+    container_name: time-tracker-api
+    image: time-tracker:1.0.0
+    ports:
+      - 9192:9192
+    networks:
+      - time-tracker-network
+    depends_on:
+      - mysql
+
+  time-tracker-ui:
+    container_name: time-tracker-ui
+    image: time-tracker-ui:1.0.0
+    ports:
+      - 3000:80
+    networks:
+      - time-tracker-network
+    depends_on:
+      - time-tracker-api
+
+networks:
+  time-tracker-network:
+    driver: bridge

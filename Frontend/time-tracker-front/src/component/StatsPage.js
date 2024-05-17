@@ -140,7 +140,7 @@ export default function StatsPage() {
                                 sx={{
                                     mt: 3,
                                 }} gutterBottom>
-                        Your longest task took
+                        The longest task you've been working on took
                         {' '}
                         <Typography
                             variant="body1"
@@ -152,8 +152,7 @@ export default function StatsPage() {
                             {formatTime(data.longestTask).hours > 0 && `${formatTime(data.longestTask).hours} ${formatTime(data.longestTask).hours === 1 ? 'hour' : 'hours'}, `}
                             {formatTime(data.longestTask).minutes > 0 && `${formatTime(data.longestTask).minutes} ${formatTime(data.longestTask).minutes === 1 ? 'minute' : 'minutes'} and `}
                             {formatTime(data.longestTask).seconds > 0 && `${formatTime(data.longestTask).seconds} ${formatTime(data.longestTask).seconds === 1 ? 'second' : 'seconds'}`}
-                        </Typography>{' '}
-                        to complete.
+                        </Typography>{'.'}
                     </Typography>
                     <Typography variant="body1" sx={{ mt: 3 }} gutterBottom>
                         Overall you've been working for{' '}

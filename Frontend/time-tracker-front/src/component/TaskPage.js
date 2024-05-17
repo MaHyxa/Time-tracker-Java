@@ -44,8 +44,8 @@ export default function TaskPage() {
                 justifyContent: "center",
                 fontWeight: "bold",
                 position: "relative",
-                top: "20px",
-                left: "30px",
+                top: "6px",
+                left: "7px",
                 "&:hover": {
                     bgcolor: theme.palette.primary.dark,
                 },

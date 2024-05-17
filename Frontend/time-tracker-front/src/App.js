@@ -4,6 +4,11 @@ import SignIn from "./component/Sign in";
 import TaskPage from "./component/TaskPage"
 import UserInfo from "./component/UserInfo"
 import {createBrowserRouter, RouterProvider} from 'react-router-dom'
+import Reports from "./component/Reports";
+import StatsPage from "./component/StatsPage";
+import { LicenseInfo } from '@mui/x-license';
+
+LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENCE_KEY);
 
 const router = createBrowserRouter([{
     path: '/',
@@ -16,6 +21,14 @@ const router = createBrowserRouter([{
     {
         path: '/my-info',
         element: <UserInfo/>
+    },
+    {
+        path: '/reports',
+        element: <Reports/>
+    },
+    {
+        path: '/my-stats',
+        element: <StatsPage />
     },
     {
         path: '/my-tasks',

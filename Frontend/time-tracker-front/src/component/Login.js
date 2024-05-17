@@ -12,19 +12,7 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
-
-function Copyright(props) {
-    return (
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright © '}
-            <Link color="inherit" href="http://localhost:3000/">
-                Time Tracker
-            </Link>{' '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
+import {Copyright} from "./PageTemplate";
 
 const defaultTheme = createTheme();
 

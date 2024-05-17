@@ -4,3 +4,7 @@ Backend/tests/src/Main.java
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/model/Test.java
 Backend/tests/src/Main.java
 Backend/Time-tracker/src/main/resources/application.yml
+*.env
+Backend/Time-tracker/src/main/resources/application-dev.yml
+Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/task/specDemo.java
+Backend/Time-tracker/src/main/resources/application-dev.yml

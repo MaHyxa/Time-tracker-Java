@@ -14,20 +14,7 @@ import Button from "@mui/material/Button";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {useNavigate} from "react-router-dom";
 import Typography from "@mui/material/Typography";
-
-
-function Copyright(props) {
-    return (
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright © '}
-            <Link color="inherit" href="http://localhost:3000/">
-                Time Tracker
-            </Link>{' '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
+import {Copyright} from "./PageTemplate";
 
 function timeout(delay) {
     return new Promise( res => setTimeout(res, delay) );
