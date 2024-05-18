@@ -10,8 +10,6 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import {mainListItems} from "./menuButtons";
 import {Container, ThemeProvider} from "@mui/material";
@@ -75,7 +73,7 @@ export function Copyright(props) {
     );
 }
 
-const drawerWidth = 240;
+const drawerWidth = 210;
 
 const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== 'open',
@@ -86,8 +84,6 @@ const AppBar = styled(MuiAppBar, {
         duration: theme.transitions.duration.leavingScreen,
     }),
     ...(open && {
-        marginLeft: drawerWidth,
-        width: `calc(100% - ${drawerWidth}px)`,
         transition: theme.transitions.create(['width', 'margin'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -114,7 +110,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
                 }),
                 width: theme.spacing(7),
                 [theme.breakpoints.up('sm')]: {
-                    width: theme.spacing(9),
+                    width: theme.spacing(7),
                 },
             }),
         },
@@ -182,7 +178,6 @@ export default function Template({ children }) {
                             onClick={toggleDrawer}
                             sx={{
                                 marginRight: '36px',
-                                ...(open && { display: 'none' }),
                             }}
                         >
                             <MenuIcon />
@@ -201,7 +196,7 @@ export default function Template({ children }) {
                         </Link>
                     </Toolbar>
                 </AppBar>
-                <Drawer variant="permanent" open={open}>
+                <Drawer variant="permanent" open={!open}>
                     <Toolbar
                         sx={{
                             display: 'flex',
@@ -209,26 +204,7 @@ export default function Template({ children }) {
                             justifyContent: 'flex-end',
                             px: [1],
                         }}
-                    >
-                        <Typography
-                            component="h1"
-                            variant="h6"
-                            color="inherit"
-                            noWrap
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'flex-end',
-                                px: [7],
-                            }}
-                        >
-                            Menu
-                        </Typography>
-                        <IconButton onClick={toggleDrawer}>
-                            <ChevronLeftIcon />
-                        </IconButton>
-                    </Toolbar>
-                    <Divider />
+                    />
                     <List component="nav">
                         {mainListItems({ navigate })}
                     </List>

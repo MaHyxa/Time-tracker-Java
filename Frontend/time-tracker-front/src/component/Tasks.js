@@ -280,7 +280,8 @@ const Tasks = ({update}) => {
                                         overflowWrap: 'break-word',
                                         wordWrap: 'break-word',
                                         hyphens: 'auto',
-                                        maxWidth: '75%'
+                                        maxWidth: '75%',
+                                        whiteSpace: 'pre-wrap'
                                     }
                                 }}/>
                                 {isHovered === index && (

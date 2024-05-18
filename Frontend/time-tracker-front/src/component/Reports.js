@@ -4,7 +4,7 @@ import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import {useNavigate} from "react-router-dom";
-import {Container} from "@mui/material";
+import {Chip, Container} from "@mui/material";
 import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/de';
@@ -18,10 +18,72 @@ import ListItemText from "@mui/material/ListItemText";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import {theme, formatDate, formatMilliseconds, isTokenExpired} from './PageTemplate';
 import PageTemplate from "./PageTemplate"
+import Divider from "@mui/material/Divider";
 
+
+function CustomRangeShortcuts(props) {
+    const { items, onChange, isValid, changeImportance = 'accept' } = props;
+
+    if (items == null || items.length === 0) {
+        return null;
+    }
+
+    const resolvedItems = items.map((item) => {
+        const newValue = item.getValue({ isValid });
+
+        return {
+            label: item.label,
+            onClick: () => {
+                onChange(newValue, changeImportance, item);
+            },
+            disabled: !isValid(newValue),
+        };
+    });
+
+    return (
+        <Box
+            sx={{
+                mt: 2,
+                gridRow: 1,
+                gridColumn: 2,
+                display: 'grid', // Set display to grid
+                gridTemplateColumns: 'repeat(2, 1fr)', // Maximum 2 columns
+                width: 325,
+            }}
+        >
+            <List
+                dense
+                sx={{
+                    display: 'contents', // Ensures ListItems follow the grid layout
+                }}
+            >
+                {resolvedItems.map((item) => (
+                    <ListItem
+                        key={item.label}
+                        sx={{
+                            display: 'flex', // Ensure each ListItem uses flex layout
+                            justifyContent: 'left', // Center the Chip in each ListItem
+                        }}
+                    >
+                        <Chip {...item} />
+                    </ListItem>
+                ))}
+            </List>
+            <Divider sx={{ gridColumn: 'span 2' }} /> {/* Divider spans 2 columns */}
+        </Box>
+
+    );
+}
 
 const shortcutsItems = [
     {label: 'Today', getValue: () => [dayjs(), dayjs()]},
+    {
+        label: 'Last 7 Days',
+        getValue: () => {
+            const today = dayjs();
+            return [today.subtract(7, 'day'), today];
+        },
+    },
     {
         label: 'This Week',
         getValue: () => {
@@ -35,13 +97,6 @@ const shortcutsItems = [
             const today = dayjs();
             const prevWeek = today.subtract(7, 'day');
             return [prevWeek.startOf('week'), prevWeek.endOf('week')];
-        },
-    },
-    {
-        label: 'Last 7 Days',
-        getValue: () => {
-            const today = dayjs();
-            return [today.subtract(7, 'day'), today];
         },
     },
     {
@@ -146,19 +201,31 @@ export default function Reports() {
             <Container maxWidth="xl" sx={{mt: 4, mb: 4}}>
                 <Grid container spacing={3}>
                     <Grid item xs={12}>
-                        <Button sx={{
-                            height: 50,
-                            borderRadius: 4,
-                            textTransform: "none",
+                        <Typography sx={{
                             fontSize: "13pt",
                             display: "flex",
                             alignItems: "left",
                             justifyContent: "center",
                             fontWeight: "bold",
                             position: "relative",
+                            color: theme.palette.primary.blue,
+                        }}>
+                            Currently selected date(s) {selected()}
+                        </Typography>
+                        <Button sx={{
+                            height: 45,
+                            borderRadius: 4,
+                            textTransform: "none",
+                            fontSize: "13pt",
+                            display: "flex",
+                            alignItems: "left",
+                            justifyContent: "center",
+                            position: "relative",
+                            color: "black",
+                            bgcolor: '#cedffd',
                         }}
                                 onClick={toggleCalendar}>
-                            {`Currently selected date(s) ${selected()}`}
+                            {openCalendar ? 'Hide Calendar' : 'Open Calendar'}
                         </Button>
                         {openCalendar && (
                             <div>
@@ -170,12 +237,23 @@ export default function Reports() {
                                         defaultValue={selectedDate}
                                         disableFuture
                                         onChange={handleDateChange}
+                                        slots={{
+                                            shortcuts: CustomRangeShortcuts,
+                                        }}
                                         slotProps={{
                                             shortcuts: {
                                                 items: shortcutsItems,
                                             },
+                                            toolbar: {
+                                                hidden: true,
+                                            },
                                             actionBar: {
                                                 actions: [],
+                                            },
+                                        }}
+                                        sx={{
+                                            '& .MuiDayCalendar-root': {
+                                                maxHeight: 265,
                                             },
                                         }}
                                     />
@@ -193,7 +271,7 @@ export default function Reports() {
                                     justifyContent: "center",
                                     fontWeight: "bold",
                                     position: "relative",
-                                    left: "13%",
+                                    left: "7%",
                                     "&:hover": {
                                         bgcolor: theme.palette.primary.dark,
                                     },

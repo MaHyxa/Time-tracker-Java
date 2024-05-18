@@ -79,7 +79,7 @@ export default function NewTask({update, taskWindow}) {
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth // to stretch the TextField to the width of its container
+                            fullWidth
                             autoFocus
                             autoComplete="off"
                             multiline // enable multiline input

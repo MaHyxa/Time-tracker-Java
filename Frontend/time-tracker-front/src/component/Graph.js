@@ -136,7 +136,6 @@ export default function Graph({getTask, startDate, endDate, createDate, complete
                 series={[
                     {
                         dataKey: 'duration',
-                        label: 'Time spent',
                         valueFormatter: tooltipFormatter,
                     },
                 ]}

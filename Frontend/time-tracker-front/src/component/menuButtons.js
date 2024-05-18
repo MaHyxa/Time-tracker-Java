@@ -29,26 +29,34 @@ export const mainListItems = ({ navigate }) => {
       <ListItemIcon>
           <PeopleIcon />
       </ListItemIcon>
-      <ListItemText primary="User Details" />
+      <ListItemText primary="User Details" sx={{
+          ml: -2,
+      }}/>
     </ListItemButton>
       <Divider sx={{ my: 1 }} />
     <ListItemButton onClick={userTasks}>
       <ListItemIcon>
           <DashboardIcon />
       </ListItemIcon>
-      <ListItemText primary="All Tasks" />
+      <ListItemText primary="All Tasks" sx={{
+          ml: -2,
+      }}/>
     </ListItemButton>
     <ListItemButton onClick={reports}>
       <ListItemIcon>
           <QueryStatsIcon />
       </ListItemIcon>
-      <ListItemText primary="Summary Reports" />
+      <ListItemText primary="Summary Reports" sx={{
+          ml: -2,
+      }}/>
     </ListItemButton>
     <ListItemButton onClick={stats}>
       <ListItemIcon>
         <BarChartIcon />
       </ListItemIcon>
-      <ListItemText primary="Statistics" />
+      <ListItemText primary="Statistics" sx={{
+          ml: -2,
+      }}/>
     </ListItemButton>
   </React.Fragment>
     );
