@@ -1,5 +1,6 @@
 package MaHyxa.Time.tracker.config;
 
+import MaHyxa.Time.tracker.errorHandlers.CustomAuthenticationFailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,6 +56,10 @@ public class SecurityConfiguration {
                                 .anyRequest()
                                 .authenticated()
                 )
+                .exceptionHandling((exception)-> exception
+                        .authenticationEntryPoint((request, response, authException) ->
+                            new CustomAuthenticationFailureHandler().onAuthenticationFailure(request, response, authException)
+                        ))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

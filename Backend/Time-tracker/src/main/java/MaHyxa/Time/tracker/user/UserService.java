@@ -37,8 +37,7 @@ public class UserService {
     public UserResponse getUser(Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
         return UserResponse.builder()
-                .firstname(user.getFirstname())
-                .lastname(user.getLastname())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .build();
     }
@@ -46,13 +45,11 @@ public class UserService {
 
     public UserResponse changeUserDetails(JsonNode requestBody, Principal connectedUser) {
         var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        user.setFirstname(requestBody.get("firstname").asText());
-        user.setLastname(requestBody.get("lastname").asText());
+        user.setFullName(requestBody.get("firstname").asText());
         user.setEmail(requestBody.get("email").asText());
         repository.save(user);
         return UserResponse.builder()
-                .firstname(user.getFirstname())
-                .lastname(user.getLastname())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .build();
     }

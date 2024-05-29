@@ -13,6 +13,8 @@ import Typography from "@mui/material/Typography";
 
 import {theme, formatDate, formatMilliseconds, isTokenExpired} from './PageTemplate';
 import Grid from "@mui/material/Grid";
+import axios from "../api/axios";
+import useAuth from "../api/useAuth";
 
 
 const Tasks = ({update}) => {
@@ -22,6 +24,7 @@ const Tasks = ({update}) => {
     const [isEmpty, setIsEmpty] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [refresh, setRefresh] = useState(false);
+    const {auth} = useAuth();
 
 
     const startButtonStyle = {
@@ -71,29 +74,41 @@ const Tasks = ({update}) => {
         loadTasks();
     }, [update, refresh]);
     const loadTasks = async () => {
-        const result = await fetch("http://localhost:9192/api/v1/tasks/my-tasks", {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    navigate('/');
-                    throw new Error('Please Login');
-                }
-            })
-            .then(data => {
-                if (data && data.length > 0) {
-                    setTasks(data);
-                    setIsEmpty(false);
-                } else {
-                    setIsEmpty(true);
-                }
-            })
-            .catch(error => console.error(error));
+        try{
+            const response = await axios.get('/api/v1/tasks/my-tasks',
+                {
+                    headers: { 'Content-Type': 'application/json'},
+                    withCredentials: true
+                });
+
+            console.log(response.data);
+
+        } catch (err) {
+
+        }
+        // const result = await fetch("http://localhost:9192/api/v1/tasks/my-tasks", {
+        //     method: 'GET',
+        //     headers: {
+        //         'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+        //     }
+        // })
+        //     .then(response => {
+        //         if (response.ok) {
+        //             return response.json();
+        //         } else {
+        //             navigate('/');
+        //             throw new Error('Please Login');
+        //         }
+        //     })
+        //     .then(data => {
+        //         if (data && data.length > 0) {
+        //             setTasks(data);
+        //             setIsEmpty(false);
+        //         } else {
+        //             setIsEmpty(true);
+        //         }
+        //     })
+        //     .catch(error => console.error(error));
     }
 
     const startTimeCount = (id, e, index) => {

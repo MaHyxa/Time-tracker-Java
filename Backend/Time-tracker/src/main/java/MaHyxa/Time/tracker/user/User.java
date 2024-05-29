@@ -4,6 +4,9 @@ package MaHyxa.Time.tracker.user;
 import MaHyxa.Time.tracker.task.Task;
 import MaHyxa.Time.tracker.auth.token.Token;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,10 +25,20 @@ public class User implements UserDetails {
   @Id
   @GeneratedValue
   private Integer id;
-  private String firstname;
-  private String lastname;
-  @Column(unique = true)
+
+  @Column(nullable = false)
+  @NotNull(message = "Full name cannot be null")
+  private String fullName;
+
+  @Column(unique = true, nullable = false)
+  @Email(message = "Invalid email format")
+  @NotNull(message = "Email cannot be null")
   private String email;
+
+
+  @Size(min = 6, message = "Password must be at least 6 characters long")
+  @Column(nullable = false)
+  @NotNull(message = "Password cannot be null")
   private String password;
 
   @Enumerated(EnumType.STRING)
@@ -38,6 +51,12 @@ public class User implements UserDetails {
   @OneToMany(mappedBy = "user", orphanRemoval = true)
   @ToString.Exclude
   private List<Task> tasks;
+
+  public User(String testfullname, String testemail, String testpassword) {
+    this.fullName = testfullname;
+    this.email = testemail;
+    this.password = testpassword;
+  }
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

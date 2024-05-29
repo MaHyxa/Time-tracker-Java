@@ -64,7 +64,7 @@ export function Copyright(props) {
     return (
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
             {'Copyright © '}
-            <Link color="inherit" href="http://localhost:3000/my-tasks">
+            <Link color="inherit" href="/my-tasks">
                 Time Tracker
             </Link>{' '}
             {new Date().getFullYear()}
@@ -164,7 +164,6 @@ export default function Template({ children }) {
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ display: 'flex' }}>
-                <CssBaseline />
                 <AppBar position="absolute" open={open}>
                     <Toolbar
                         sx={{
@@ -212,10 +211,8 @@ export default function Template({ children }) {
                 <Box
                     component="main"
                     sx={{
-                        backgroundColor: (theme) =>
-                            theme.palette.mode === 'light'
-                                ? theme.palette.grey[100]
-                                : theme.palette.grey[900],
+                        backgroundColor: '#fff',
+                        backgroundImage: 'radial-gradient(circle at 200% 300%, #2d8cff, #fff 82%), radial-gradient(circle at 50% 0, rgba(239, 152, 207, .2), rgba(0, 0, 0, 0) 57%), radial-gradient(circle at 0 20%, rgba(122, 167, 255, .25), rgba(0, 0, 0, 0) 42%)',
                         flexGrow: 1,
                         height: '100vh',
                         overflow: 'auto',
@@ -225,7 +222,7 @@ export default function Template({ children }) {
                     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
-                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', border: '1px solid #e7e7e789' }}>
                                     {children}
                                 </Paper>
                             </Grid>
