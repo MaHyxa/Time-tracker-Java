@@ -1,6 +1,26 @@
 import React from 'react'
+import {useNavigate} from "react-router-dom";
+import {useKeycloak} from "@react-keycloak/web";
 
 function Home() {
+
+    const { keycloak } = useKeycloak();
+    const navigate = useNavigate();
+
+    const handleSignUp = () => {
+        if (keycloak) {
+            if (keycloak.authenticated) {
+                // If the user is already authenticated, redirect to /my-tasks
+                navigate('/my-tasks');
+            } else {
+                // If the user is not authenticated, initiate the registration process
+                keycloak.register({
+                    redirectUri: window.location.origin, // Redirect to login page after registration
+                });
+            }
+        }
+    };
+
     return (
         <div>
             <div className="pagewrap">
@@ -10,8 +30,11 @@ function Home() {
                             <div className="hero-split"><h1 className="heading-3">Welcome to Time Tracker!</h1>
                                 <p className="margin-bottom-24px">Current web service was designed as an open-source
                                     non-commercial
-                                    project to help people track their time on different daily tasks.</p><a
-                                    className="button-primary-3 w-button" href="/register">free sign up</a></div>
+                                    project to help people track their time on different daily tasks.</p>
+                                <button className="button-primary-3 w-button" onClick={handleSignUp}>
+                                    Free Sign Up
+                                </button>
+                            </div>
                             <div className="hero-split"><img alt="" className="shadow-two" loading="lazy"
                                                              sizes="(max-width: 479px) 92vw, (max-width: 767px) 94vw, (max-width: 991px) 525px, 432.390625px"
                                                              src="https://assets-global.website-files.com/664cb48da27c78324389e462/664de0d159b6a4fe05f9d3dc_shutterstock_80580652.jpg"

@@ -4261,8 +4261,7 @@ figcaption {
 .footer-dark {
     background-color: #f5f7fa;
     border-top: 1px #2873ce;
-    border-bottom: 1px solid #e4ebf3;
-    padding: 20px 30px 15px;
+    padding: 15px 15px 15px;
     position: relative;
     box-shadow: inset 0 4px 10px -4px rgba(0, 0, 0, .58);
 }
@@ -4393,7 +4392,7 @@ figcaption {
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 86vh;
+    height: 86.7vh;
     padding: 20px;
     text-decoration: none;
     display: flex;

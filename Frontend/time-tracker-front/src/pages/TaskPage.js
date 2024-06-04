@@ -2,12 +2,12 @@ import * as React from 'react';
 import {styled} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/Add';
-import Tasks from './Tasks';
+import Tasks from '../component/Tasks';
 import Button from "@mui/material/Button";
-import NewTask from "./New Task";
+import NewTask from "../component/New Task";
 import {useState} from "react";
-import {theme} from './PageTemplate';
-import PageTemplate from "./PageTemplate"
+import {theme} from '../component/PageTemplate';
+import PageTemplate from "../component/PageTemplate"
 
 
 const StyledBox = styled(Box)(({theme}) => ({

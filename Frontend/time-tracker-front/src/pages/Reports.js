@@ -3,7 +3,6 @@ import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import {useNavigate} from "react-router-dom";
 import {Chip, Container} from "@mui/material";
 import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
@@ -11,14 +10,14 @@ import 'dayjs/locale/de';
 import dayjs from "dayjs";
 import {StaticDateRangePicker} from "@mui/x-date-pickers-pro";
 import Button from "@mui/material/Button";
-import Graph from "./Graph";
+import Graph from "../component/Graph";
 import {useEffect, useState} from "react";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import {theme, formatDate, formatMilliseconds, isTokenExpired} from './PageTemplate';
-import PageTemplate from "./PageTemplate"
+import {theme, formatDate, formatMilliseconds} from '../component/PageTemplate';
+import PageTemplate from "../component/PageTemplate"
 import Divider from "@mui/material/Divider";
+import useAxiosPrivate from "../api/useAxiosPrivate";
 
 
 function CustomRangeShortcuts(props) {
@@ -121,8 +120,8 @@ export default function Reports() {
     const [tasks, setTasks] = useState([]);
     const [isEmpty, setIsEmpty] = useState(true);
     const [isSelected, setIsSelected] = useState(false);
-    const navigate = useNavigate();
     const currentDay = dayjs().endOf('day');
+    const axiosPrivate = useAxiosPrivate();
 
     const [selectedDate, setSelectedDate] = React.useState([currentDay, currentDay]);
 
@@ -154,53 +153,37 @@ export default function Reports() {
     }
 
 
-    const submitRequest = (e, startDate, endDate) => {
+    const submitRequest = async (e, startDate, endDate) => {
         e.preventDefault();
-        if (isTokenExpired(localStorage.getItem('jwtToken'))) {
-            localStorage.removeItem('jwtToken');
-            navigate('/');
-            return;
-        }
 
-        const data = {
-            startDate: startDate.toDate(),
-            endDate: endDate.toDate()
-        }
+        try {
+            const response = await axiosPrivate.post('/api/v1/tasks/my-tasks/findByDates',
+                {
+                    startDate: startDate.toDate(),
+                    endDate: endDate.toDate()
+                });
+            if (response.data && response.data.length > 0) {
+                setTasks(response.data);
+                setIsEmpty(false);
+            } else {
+                setIsEmpty(true);
+            }
+            setIsSelected(true);
 
-        fetch("http://localhost:9192/api/v1/tasks/my-tasks/findByDates", {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (response.ok) {
-                    setIsSelected(true);
-                    return response.json();
-                } else {
-                    return console.error("Something wrong")
-                }
-            })
-            .then(response => {
-                if (response && response.length > 0) {
-                    setTasks(response);
-                    setIsEmpty(false);
-                } else {
-                    setIsEmpty(true);
-                }
-            })
-            .catch(error => {
-                console.error(error);
-            });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     return (
         <PageTemplate>
             <Container maxWidth="xl" sx={{mt: 4, mb: 4}}>
                 <Grid container spacing={3}>
-                    <Grid item xs={12}>
+                    <Grid item xs={12}
+                          sx={{
+                              padding: '5px !important',
+                          }}
+                    >
                         <Typography sx={{
                             fontSize: "13pt",
                             display: "flex",
@@ -328,7 +311,7 @@ export default function Reports() {
                                                         color={theme.palette.secondary.red}
                                                         sx={{
                                                             mt: 2,
-                                                            ml: '85%'
+                                                            display: 'flex', justifyContent: 'flex-end',
                                                         }} gutterBottom>
                                                 Created on: {formatDate(item.task.createdAt)}
                                             </Typography>
@@ -360,9 +343,13 @@ export default function Reports() {
                                                     primary={!item.task.active && item.task.complete ? "COMPLETED!" : ""}
                                                     primaryTypographyProps={{
                                                         sx: {
-                                                            color: "white",
+                                                            color: "black",
                                                             textTransform: "none",
-                                                            fontSize: "17pt",
+                                                            fontSize: {
+                                                                xs: '12px',  // 0px to 479px screen width
+                                                                sm: '16px',  // 480px to 991px screen width
+                                                                md: '18px',  // 992px and above
+                                                            },
                                                             display: "flex",
                                                             alignItems: "center",
                                                             justifyContent: "center",
@@ -374,18 +361,9 @@ export default function Reports() {
                                                         }
                                                     }}
                                                 />
-                                                {!item.task.active && item.task.complete &&
-                                                    <CheckCircleIcon sx={{
-                                                        position: "relative",
-                                                        right: "2%",
-                                                        color: "white",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center"
-                                                    }}/>}
                                             </ListItem>
                                             <Grid container spacing={1} mb={3}>
-                                                <Grid item xs={6}>
+                                                <Grid item xs={12} sm={6}>
                                                 {!item.task.active && (
                                                     <ListItemText primary={
                                                         <>
@@ -424,14 +402,9 @@ export default function Reports() {
                                                     </ListItemText>
                                                 )}
                                                 </Grid>
-                                                <Grid item xs={6}>
+                                                <Grid item xs={12} sm={6} sx={{ textAlign: 'right' }}>
                                                     {!item.task.active && item.task.complete && (
-                                                        <Typography component="span" variant="body2" color={theme.palette.primary.dark}
-                                                                    sx={{
-                                                                        position: "relative",
-                                                                        mt: 5,
-                                                                        left: "68%"
-                                                                    }} >
+                                                        <Typography component="span" variant="body2" color={theme.palette.primary.dark}>
                                                             Completed on: {formatDate(item.task.completedAt)}
                                                         </Typography>
                                                     )}

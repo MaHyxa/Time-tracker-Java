@@ -4,14 +4,11 @@ import {Link} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useNavigate, useLocation } from 'react-router-dom';
-import LogoutBackground from "./LogoutBackground";
-import {ErrorBox, StyledTextField} from "./LogoutBackground";
+import LogoutBackground from "../component/LogoutBackground";
+import {ErrorBox, StyledTextField} from "../component/LogoutBackground";
 import axios from '../api/axios';
-import useAuth from "../api/useAuth";
 
 function Login() {
-    const {setAuth} = useAuth();
-
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
@@ -70,10 +67,9 @@ function Login() {
                     withCredentials: true
                 });
             const accessToken = response?.data?.accessToken;
-            setAuth({accessToken, isAuthenticated: true});
             console.log(response.data);
             navigate('/my-tasks');
-            //navigate(from, { replace: true });
+            navigate(from, { replace: true });
         } catch (err) {
             if (!err?.response) {
                 setResponseErrorText('Network error: Connection refused');

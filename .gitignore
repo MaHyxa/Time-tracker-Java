@@ -8,3 +8,7 @@ Backend/Time-tracker/src/main/resources/application.yml
 Backend/Time-tracker/src/main/resources/application-dev.yml
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/task/specDemo.java
 Backend/Time-tracker/src/main/resources/application-dev.yml
+realm-export.json
+test/index.html
+test/styles.css
+tt2

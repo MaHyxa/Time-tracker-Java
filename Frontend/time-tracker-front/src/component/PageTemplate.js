@@ -1,34 +1,13 @@
-import Typography from "@mui/material/Typography";
-import Link from "@mui/material/Link";
 import * as React from "react";
 import {createTheme, styled} from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import MuiAppBar from "@mui/material/AppBar";
 import MuiDrawer from "@mui/material/Drawer";
 import {useNavigate} from "react-router-dom";
-import CssBaseline from "@mui/material/CssBaseline";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
 import List from "@mui/material/List";
 import {mainListItems} from "./menuButtons";
 import {Container, ThemeProvider} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
-
-
-export function isTokenExpired(token) {
-    if (!token) {
-        // Token is missing
-        return true;
-    }
-
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expirationTime = payload.exp * 1000;
-
-    const currentTime = Date.now();
-    return expirationTime < currentTime;
-}
 
 export function formatMilliseconds(milliseconds) {
     const seconds = Math.floor(milliseconds / 1000);
@@ -60,43 +39,12 @@ export function formatDate(inputDate) {
     return `${day}/${month}/${year}`;
 }
 
-export function Copyright(props) {
-    return (
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
-            {'Copyright © '}
-            <Link color="inherit" href="/my-tasks">
-                Time Tracker
-            </Link>{' '}
-            {new Date().getFullYear()}
-            {'.'}
-        </Typography>
-    );
-}
-
-const drawerWidth = 210;
-
-const AppBar = styled(MuiAppBar, {
-    shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
-    zIndex: theme.zIndex.drawer + 1,
-    transition: theme.transitions.create(['width', 'margin'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    ...(open && {
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    }),
-}));
-
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
     ({ theme, open }) => ({
         '& .MuiDrawer-paper': {
             position: 'relative',
             whiteSpace: 'nowrap',
-            width: drawerWidth,
+            width: 210,
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
@@ -136,74 +84,14 @@ export const defaultTheme = createTheme();
 
 export default function Template({ children }) {
 
-    const [open, setOpen] = React.useState(true);
-    const toggleDrawer = () => {
-        setOpen(!open);
-    };
+    ///const { getOpenStatus } = useOpen();
 
     const navigate = useNavigate();
-
-    const handleLogout=(e)=>{
-        e.preventDefault()
-        fetch("http://localhost:9192/api/v1/auth/logout", {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    localStorage.removeItem('jwtToken');
-                    navigate('/');
-                } else {
-                    throw new Error('Logout failed');
-                }
-            })
-    }
 
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ display: 'flex' }}>
-                <AppBar position="absolute" open={open}>
-                    <Toolbar
-                        sx={{
-                            pr: '24px', // keep right padding when drawer closed
-                        }}
-                    >
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            aria-label="open drawer"
-                            onClick={toggleDrawer}
-                            sx={{
-                                marginRight: '36px',
-                            }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography
-                            component="h1"
-                            variant="h6"
-                            color="inherit"
-                            noWrap
-                            sx={{ flexGrow: 1 }}
-                        >
-                            Time Tracker
-                        </Typography>
-                        <Link color="inherit" href="#" onClick={handleLogout}>
-                            Logout
-                        </Link>
-                    </Toolbar>
-                </AppBar>
-                <Drawer variant="permanent" open={!open}>
-                    <Toolbar
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            px: [1],
-                        }}
-                    />
+                <Drawer variant="permanent" open={false}>
                     <List component="nav">
                         {mainListItems({ navigate })}
                     </List>
@@ -214,11 +102,10 @@ export default function Template({ children }) {
                         backgroundColor: '#fff',
                         backgroundImage: 'radial-gradient(circle at 200% 300%, #2d8cff, #fff 82%), radial-gradient(circle at 50% 0, rgba(239, 152, 207, .2), rgba(0, 0, 0, 0) 57%), radial-gradient(circle at 0 20%, rgba(122, 167, 255, .25), rgba(0, 0, 0, 0) 42%)',
                         flexGrow: 1,
-                        height: '100vh',
+                        height: '86.7vh',
                         overflow: 'auto',
                     }}
                 >
-                    <Toolbar />
                     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
@@ -227,7 +114,6 @@ export default function Template({ children }) {
                                 </Paper>
                             </Grid>
                         </Grid>
-                        <Copyright sx={{ pt: 4 }} />
                     </Container>
                 </Box>
             </Box>

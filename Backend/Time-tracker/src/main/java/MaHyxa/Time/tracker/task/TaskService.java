@@ -1,15 +1,12 @@
 package MaHyxa.Time.tracker.task;
 
 import MaHyxa.Time.tracker.task.taskSession.TaskSessionService;
-import MaHyxa.Time.tracker.user.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.sql.Date;
@@ -25,10 +22,20 @@ public class TaskService {
     private final TaskSessionService taskSessionService;
 
 
-    public List<Task> getAllTasksByUserId(Principal connectedUser) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+    public StatisticResponse getStatistic(Authentication connectedUser) {
 
-        var userTasks = taskRepository.findAllUserTasks(user.getId());
+        return StatisticResponse.builder()
+                .totalUserTasks(taskRepository.findAllTasksByUser(connectedUser.getName()))
+                .activeUserTasks(taskRepository.findAllActiveTasksByUser(connectedUser.getName()))
+                .completeUserTasks(taskRepository.findAllCompleteTasksByUser(connectedUser.getName()))
+                .longestTask(taskRepository.findLongestTaskByUser(connectedUser.getName()))
+                .totalTimeSpent(taskRepository.findTasksTotalSpentTimeByUser(connectedUser.getName()))
+                .build();
+    }
+
+    public List<Task> getAllTasksByUserId(Authentication connectedUser) {
+
+        var userTasks = taskRepository.findAllUserTasks(connectedUser.getName());
         if (userTasks.isEmpty())
             return Collections.emptyList();
 
@@ -36,11 +43,10 @@ public class TaskService {
     }
 
 
-    public void createTask(String taskName, Principal connectedUser) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+    public void createTask(JsonNode taskName, Authentication connectedUser) {
         Task task = Task.builder()
-                .taskName(taskName)
-                .user(user)
+                .taskName(taskName.get("description").asText())
+                .userId(connectedUser.getName())
                 .createdAt(LocalDateTime.now())
                 .taskSession(Collections.emptyList())
                 .spentTime(0L)
@@ -49,9 +55,9 @@ public class TaskService {
     }
 
 
-    private Task updateTask(Long requestBody, Principal connectedUser, boolean setActive, boolean setComplete) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody);
+    private Task updateTask(Long requestBody, Authentication connectedUser, boolean setActive, boolean setComplete) {
+
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
         if(patchedTask.isComplete())
             return patchedTask;
 
@@ -75,33 +81,33 @@ public class TaskService {
         return patchedTask;
     }
 
-    public Task startTime(Long requestBody, Principal connectedUser) {
+    public Task startTime(Long requestBody, Authentication connectedUser) {
         return updateTask(requestBody, connectedUser, true, false);
     }
 
-    public Task stopTime(Long requestBody, Principal connectedUser) {
+    public Task stopTime(Long requestBody, Authentication connectedUser) {
         return updateTask(requestBody, connectedUser, false, false);
     }
 
-    public Task completeTask(Long requestBody, Principal connectedUser) {
+    public Task completeTask(Long requestBody, Authentication connectedUser) {
         return updateTask(requestBody, connectedUser, false, true);
     }
 
 
-    public void deleteTask(Long requestBody, Principal connectedUser) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(user.getId(), requestBody);
+    public void deleteTask(Long requestBody, Authentication connectedUser) {
+
+        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
         taskRepository.delete(patchedTask);
     }
 
-    public List<TaskReportResponse> findTasksByDates(JsonNode dateRange, Principal connectedUser) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) connectedUser).getPrincipal();
+    public List<TaskReportResponse> findTasksByDates(JsonNode dateRange, Authentication connectedUser) {
+
         String startDate = dateRange.get("startDate").asText().substring(0, 10);
         String endDate = dateRange.get("endDate").asText().substring(0, 10);
 
         List<TaskReportResponse> selectedTasksForReport = new ArrayList<>();
 
-        List<Task> selectedTasks = taskRepository.findTasksByDateRange(Date.valueOf(startDate), Date.valueOf(endDate), user.getId());
+        List<Task> selectedTasks = taskRepository.findTasksByDateRange(Date.valueOf(startDate), Date.valueOf(endDate), connectedUser.getName());
 
         for (Task t: selectedTasks) {
             TaskReportResponse trr = TaskReportResponse.builder()
@@ -115,12 +121,12 @@ public class TaskService {
     }
 
 
-    //Midnight Task reset
-    @Scheduled(cron = "59 59 23 * * *")
-    public void stopAllActiveTasks() {
-        taskRepository.findAllByIsActiveTrue().forEach(task -> {
-            taskRepository.deactivateActiveTasks(task.getId());
-            taskSessionService.deleteSession(task);
-        });
-    }
+    //Midnight Task reset if needed
+//    @Scheduled(cron = "59 59 23 * * *")
+//    public void stopAllActiveTasks() {
+//        taskRepository.findAllByIsActiveTrue().forEach(task -> {
+//            taskRepository.deactivateActiveTasks(task.getId());
+//            taskSessionService.deleteSession(task);
+//        });
+//    }
 }

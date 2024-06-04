@@ -14,7 +14,7 @@ import Button from "@mui/material/Button";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {useNavigate} from "react-router-dom";
 import Typography from "@mui/material/Typography";
-import {Copyright} from "./PageTemplate";
+import {Copyright} from "../component/PageTemplate";
 
 function timeout(delay) {
     return new Promise( res => setTimeout(res, delay) );

@@ -1,4 +1,5 @@
 import React from 'react'
+import {Link} from "react-router-dom";
 
 function Page404() {
     return (
@@ -9,7 +10,9 @@ function Page404() {
                 <h1 className="heading h1">Page not found</h1>
                 <p className="paragraph">The page you are looking for doesn&#x27;t exist or has been moved.</p>
                 <div className="spacer _24"></div>
-                <a href="/" className="button w-button">Go to Home</a></div>
+                <Link to="/" className="button w-button">
+                    Go to Home
+                </Link></div>
         </div>
     )
 }

@@ -7,8 +7,9 @@ import Paper from "@mui/material/Paper";
 import {styled} from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import {TaskAlt} from "@mui/icons-material";
+import useAxiosPrivate from "../api/useAxiosPrivate";
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
+const StyledPaper = styled(Paper)(({theme}) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
     ...theme.typography.body2,
     padding: theme.spacing(2),
@@ -24,6 +25,7 @@ const StyledButton = styled(Button)({
 
 export default function NewTask({update, taskWindow}) {
 
+    const axiosPrivate = useAxiosPrivate();
     const [description, setDescription] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
     const [success, setSuccess] = React.useState(false);
@@ -36,31 +38,31 @@ export default function NewTask({update, taskWindow}) {
     };
 
 
-    const addNewTask=(e)=>{
+    const addNewTask = async (e) => {
         e.preventDefault()
-        if(description === null || description.trim() === ""){
+        if (description === null || description.trim() === "") {
             return setErrorMessage("Task can't be empty")
         }
-        fetch("http://localhost:9192/api/v1/tasks/new", {
-            method: "POST",
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
-            },
-            body: description
-        }).then(response => {
-            if (response.ok) {
-                setErrorMessage('');
-                setSuccess(true);
-                setTimeout(() => {
-                    refresh();
-                }, 500);
+        try {
+            const response = await axiosPrivate.post('/api/v1/tasks/new',
+                {
+                    description: description
+                });
+            setErrorMessage('');
+            setSuccess(true);
+            setTimeout(() => {
+                refresh();
+            }, 500);
+            console.log(response.data);
+
+        } catch (err) {
+            if (err.response && err.response.status === 400) {
+                setErrorMessage("Too many requests. Please try again after 3 seconds");
             } else {
-                return setErrorMessage("Too many requests. Please try again after 3 seconds")
+                // Handle other errors if necessary
+                setErrorMessage("An unexpected error occurred. Please try again.");
             }
-        })
-            .catch(error => {
-                console.error(error);
-            });
+        }
     }
 
     return (
@@ -71,51 +73,51 @@ export default function NewTask({update, taskWindow}) {
                 p: 2,
             }}
         >
-                <Grid container spacing={1}>
-                    <Grid item xs={12}>
-                        <Typography variant="subtitle1" gutterBottom>
-                            Describe your task
+            <Grid container spacing={1}>
+                <Grid item xs={12}>
+                    <Typography variant="subtitle1" gutterBottom>
+                        Describe your task
+                    </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        autoFocus
+                        autoComplete="off"
+                        multiline // enable multiline input
+                        rows={rows} // number of visible rows
+                        sx={{
+                            overflowWrap: 'break-word',
+                            wordWrap: 'break-word',
+                            hyphens: 'auto'
+                        }}
+                        value={description}
+                        onChange={(e) => {
+                            setDescription(e.target.value);
+                            const textareaLineHeight = 24;
+                            const newRows = e.target.value ? Math.ceil(e.target.scrollHeight / textareaLineHeight) : 1;
+                            setRows(newRows);
+                        }}
+                    />
+                </Grid>
+                <Grid item xs={12}>
+                    {errorMessage && (
+                        <Typography variant="body2" color="error">
+                            {errorMessage}
                         </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            autoFocus
-                            autoComplete="off"
-                            multiline // enable multiline input
-                            rows={rows} // set the number of visible rows
-                            sx={{
-                                overflowWrap: 'break-word',
-                                wordWrap: 'break-word',
-                                hyphens: 'auto'
-                            }}
-                            value={description}
-                            onChange={(e) => {
-                                setDescription(e.target.value);
-                                const textareaLineHeight = 24;
-                                const newRows = e.target.value ? Math.ceil(e.target.scrollHeight / textareaLineHeight) : 1;
-                                setRows(newRows);
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        {errorMessage && (
-                            <Typography variant="body2" color="error">
-                                {errorMessage}
-                            </Typography>
-                        )}
-                    </Grid>
-                    <Grid item sx={{mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                        <StyledButton variant="contained" color="primary" onClick={addNewTask}>
-                            Add task
-                        </StyledButton>
-                    </Grid>
-                    {success && (
-                        <Grid item sx={{mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                            <TaskAlt style={{ color: 'green' }} />
-                        </Grid>
                     )}
                 </Grid>
+                <Grid item sx={{mt: 2, display: 'flex', justifyContent: 'flex-end'}}>
+                    <StyledButton variant="contained" color="primary" onClick={addNewTask}>
+                        Add task
+                    </StyledButton>
+                </Grid>
+                {success && (
+                    <Grid item sx={{mt: 3, display: 'flex', justifyContent: 'flex-end'}}>
+                        <TaskAlt style={{color: 'green'}}/>
+                    </Grid>
+                )}
+            </Grid>
         </StyledPaper>
     );
 }

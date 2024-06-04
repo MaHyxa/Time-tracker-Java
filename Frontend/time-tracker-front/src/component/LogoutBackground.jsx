@@ -59,7 +59,7 @@ function LogoutBackground({ children }) {
                 justifyContent: 'center',
                 alignItems: 'center',
                 width: '100%',
-                height: '86vh',
+                height: '86.7vh',
                 padding: '20px',
                 textDecoration: 'none',
                 display: 'flex',

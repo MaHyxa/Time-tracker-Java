@@ -4,9 +4,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
-import BarChartIcon from '@mui/icons-material/BarChart';
 import Divider from "@mui/material/Divider";
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import AssignmentReturnedRoundedIcon from '@mui/icons-material/AssignmentReturnedRounded';
 
 export const mainListItems = ({ navigate }) => {
     const userInfo = () => {
@@ -19,8 +19,8 @@ export const mainListItems = ({ navigate }) => {
         navigate('/reports')
     }
 
-    const stats = () => {
-        navigate('/my-stats')
+    const publicTask = () => {
+        navigate('/public-tasks')
     }
 
     return (
@@ -38,23 +38,23 @@ export const mainListItems = ({ navigate }) => {
       <ListItemIcon>
           <DashboardIcon />
       </ListItemIcon>
-      <ListItemText primary="All Tasks" sx={{
+      <ListItemText primary="My Tasks" sx={{
           ml: -2,
       }}/>
     </ListItemButton>
+      <ListItemButton onClick={publicTask}>
+          <ListItemIcon>
+              <AssignmentReturnedRoundedIcon />
+          </ListItemIcon>
+          <ListItemText primary="Public Tasks" sx={{
+              ml: -2,
+          }}/>
+      </ListItemButton>
     <ListItemButton onClick={reports}>
       <ListItemIcon>
           <QueryStatsIcon />
       </ListItemIcon>
       <ListItemText primary="Summary Reports" sx={{
-          ml: -2,
-      }}/>
-    </ListItemButton>
-    <ListItemButton onClick={stats}>
-      <ListItemIcon>
-        <BarChartIcon />
-      </ListItemIcon>
-      <ListItemText primary="Statistics" sx={{
           ml: -2,
       }}/>
     </ListItemButton>

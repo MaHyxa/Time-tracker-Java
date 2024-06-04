@@ -1,4 +1,4 @@
-package MaHyxa.Time.tracker.user;
+package MaHyxa.Time.tracker.task;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

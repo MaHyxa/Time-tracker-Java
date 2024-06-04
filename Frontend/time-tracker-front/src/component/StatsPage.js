@@ -1,10 +1,8 @@
 import * as React from 'react';
 import {useEffect, useState} from "react";
 import {theme} from './PageTemplate';
-import PageTemplate from "./PageTemplate"
 import Typography from "@mui/material/Typography";
-import {useNavigate} from "react-router-dom";
-
+import useAxiosPrivate from "../api/useAxiosPrivate";
 
 
 const formatTime = (milliseconds) => {
@@ -30,11 +28,9 @@ const formatTime = (milliseconds) => {
 };
 
 
-
-
-
 export default function StatsPage() {
 
+    const axiosPrivate = useAxiosPrivate();
     const [data, setData] = useState([]);
     const [isEmpty, setIsEmpty] = useState(false);
 
@@ -42,36 +38,21 @@ export default function StatsPage() {
         getStats();
     }, []);
 
-    const navigate = useNavigate();
     const getStats = async () => {
-        const result = await fetch("http://localhost:9192/api/v1/users/userStatistics", {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+        try {
+            const response = await axiosPrivate.get('/api/v1/tasks/userStatistics');
+            if (response.data && response.data.totalUserTasks > 0) {
+                setData(response.data);
+                setIsEmpty(false);
+            } else {
+                setIsEmpty(true);
             }
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    navigate('/');
-                    throw new Error('Please Login');
-                }
-            })
-            .then(data => {
-                if (data && data.totalUserTasks > 0) {
-                    setData(data);
-                    setIsEmpty(false);
-                } else {
-                    setIsEmpty(true);
-                }
-            })
-            .catch(error => console.error(error));
+        } catch (err) {
+        }
     }
 
-
     return (
-        <PageTemplate>
+        <div>
             {isEmpty && (
                 <Typography variant="h5"
                             sx={{
@@ -178,6 +159,6 @@ export default function StatsPage() {
                     </Typography>
                 </div>
             )}
-        </PageTemplate>
+        </div>
     );
 }

@@ -1,14 +1,17 @@
-import { Outlet } from "react-router-dom"
-import Header from "../pages/Header";
-import Footer from "../pages/Footer";
+import {Outlet} from "react-router-dom"
+import Footer from "./Footer";
+import Navbar from "../pages/Navbar";
+import {OpenProvider} from "./useOpen";
 
 const Layout = () => {
     return (
-        <main className="App">
-            <Header/>
-            <Outlet />
-            <Footer/>
-        </main>
+        <OpenProvider>
+            <main className="App">
+                <Navbar/>
+                <Outlet/>
+                <Footer/>
+            </main>
+        </OpenProvider>
     )
 }
 

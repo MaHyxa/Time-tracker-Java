@@ -1,11 +1,11 @@
 import React, {useState} from 'react'
 import {useNavigate} from "react-router-dom";
-import LogoutBackground from "./LogoutBackground";
+import LogoutBackground from "../component/LogoutBackground";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { Link } from "@mui/material";
-import {ErrorBox, StyledTextField} from "./LogoutBackground";
+import {ErrorBox, StyledTextField} from "../component/LogoutBackground";
 import axios from '../api/axios';
 
 function SignUp() {
@@ -212,7 +212,7 @@ function SignUp() {
                     }}
                 >
                     <Typography variant="body1">Already have an account? {' '}
-                        <Link href="/login">Log In</Link>
+                        <Link href="/Frontend/time-tracker-front/src/leftovers/Login">Log In</Link>
                     </Typography>
                 </Box>
             </Box>
@@ -263,7 +263,7 @@ function SignUp() {
                         Your account was created successfully. You can now log in by navigating to the link below.
                     </Typography>
                 </Box>
-                <Link href="/login">
+                <Link href="/Frontend/time-tracker-front/src/leftovers/Login">
                     <Button
                         variant="contained"
                         sx={{

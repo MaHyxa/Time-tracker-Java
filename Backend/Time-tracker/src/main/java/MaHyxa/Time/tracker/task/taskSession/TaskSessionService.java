@@ -43,6 +43,7 @@ public class TaskSessionService {
         }
     }
 
+    //using for midnight reset
     public void deleteSession(Task task) {
         TaskSession taskSession = taskSessionRepository.findActiveSessionByTaskId(task.getId());
         taskSessionRepository.delete(taskSession);
