@@ -7,8 +7,9 @@ import PeopleIcon from '@mui/icons-material/People';
 import Divider from "@mui/material/Divider";
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import AssignmentReturnedRoundedIcon from '@mui/icons-material/AssignmentReturnedRounded';
+import {Tooltip} from "@mui/material";
 
-export const mainListItems = ({ navigate }) => {
+export const mainListItems = ({navigate}) => {
     const userInfo = () => {
         navigate('/my-info');
     };
@@ -24,40 +25,48 @@ export const mainListItems = ({ navigate }) => {
     }
 
     return (
-  <React.Fragment>
-    <ListItemButton onClick={userInfo}>
-      <ListItemIcon>
-          <PeopleIcon />
-      </ListItemIcon>
-      <ListItemText primary="User Details" sx={{
-          ml: -2,
-      }}/>
-    </ListItemButton>
-      <Divider sx={{ my: 1 }} />
-    <ListItemButton onClick={userTasks}>
-      <ListItemIcon>
-          <DashboardIcon />
-      </ListItemIcon>
-      <ListItemText primary="My Tasks" sx={{
-          ml: -2,
-      }}/>
-    </ListItemButton>
-      <ListItemButton onClick={publicTask}>
-          <ListItemIcon>
-              <AssignmentReturnedRoundedIcon />
-          </ListItemIcon>
-          <ListItemText primary="Public Tasks" sx={{
-              ml: -2,
-          }}/>
-      </ListItemButton>
-    <ListItemButton onClick={reports}>
-      <ListItemIcon>
-          <QueryStatsIcon />
-      </ListItemIcon>
-      <ListItemText primary="Summary Reports" sx={{
-          ml: -2,
-      }}/>
-    </ListItemButton>
-  </React.Fragment>
+        <React.Fragment>
+            <Tooltip title="User Details" placement="right">
+                <ListItemButton onClick={userInfo}>
+                    <ListItemIcon>
+                        <PeopleIcon/>
+                    </ListItemIcon>
+                    <ListItemText primary="User Details" sx={{
+                        ml: -2,
+                    }}/>
+                </ListItemButton>
+            </Tooltip>
+            <Divider sx={{my: 1}}/>
+            <Tooltip title="My Tasks" placement="right">
+                <ListItemButton onClick={userTasks}>
+                    <ListItemIcon>
+                        <DashboardIcon/>
+                    </ListItemIcon>
+                    <ListItemText primary="My Tasks" sx={{
+                        ml: -2,
+                    }}/>
+                </ListItemButton>
+            </Tooltip>
+            <Tooltip title="Public Tasks" placement="right">
+                <ListItemButton onClick={publicTask}>
+                    <ListItemIcon>
+                        <AssignmentReturnedRoundedIcon/>
+                    </ListItemIcon>
+                    <ListItemText primary="Public Tasks" sx={{
+                        ml: -2,
+                    }}/>
+                </ListItemButton>
+            </Tooltip>
+            <Tooltip title="Summary Reports" placement="right">
+                <ListItemButton onClick={reports}>
+                    <ListItemIcon>
+                        <QueryStatsIcon/>
+                    </ListItemIcon>
+                    <ListItemText primary="Summary Reports" sx={{
+                        ml: -2,
+                    }}/>
+                </ListItemButton>
+            </Tooltip>
+        </React.Fragment>
     );
 };

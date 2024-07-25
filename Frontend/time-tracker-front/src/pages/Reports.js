@@ -234,11 +234,11 @@ export default function Reports() {
                                                 actions: [],
                                             },
                                         }}
-                                        sx={{
-                                            '& .MuiDayCalendar-root': {
-                                                maxHeight: 265,
-                                            },
-                                        }}
+                                        // sx={{
+                                        //     '& .MuiDayCalendar-root': {
+                                        //         maxHeight: 265,
+                                        //     },
+                                        // }}
                                     />
                                 </LocalizationProvider>
                                 <Button sx={{

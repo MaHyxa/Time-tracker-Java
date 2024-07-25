@@ -8,6 +8,7 @@ import {styled} from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import {TaskAlt} from "@mui/icons-material";
 import useAxiosPrivate from "../api/useAxiosPrivate";
+import Box from "@mui/material/Box";
 
 export const StyledPaper = styled(Paper)(({theme}) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -23,13 +24,15 @@ const StyledButton = styled(Button)({
     marginLeft: 'auto', // Adjust the distance from the right
 });
 
-export default function NewTask({update, taskWindow}) {
+export default function NewPublicTask({update, taskWindow}) {
 
     const axiosPrivate = useAxiosPrivate();
     const [description, setDescription] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [rows, setRows] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    const [requestResponse, setRequestResponse] = useState([]);
 
     //This fkin function pass fkin value to fkin parent class and refresh fkin task list!
     const refresh = () => {
@@ -38,28 +41,35 @@ export default function NewTask({update, taskWindow}) {
     };
 
 
-    const addNewTask = async (e) => {
+    const addNewPublicTask = async (e) => {
         e.preventDefault()
         if (description === null || description.trim() === "") {
             return setErrorMessage("Task can't be empty")
         }
+        setIsLoading(true);
         try {
-            const response = await axiosPrivate.post('/api/v1/tasks/new',
+            const response = await axiosPrivate.post('/api/v1/public-tasks/addPublicTask',
                 {
-                    description: description
+                    taskName: description,
+                    assignedUsers: [
+                        "asd@asd.asd",
+                        "asd@asd.asd",
+                        "asd@asd.asd",
+                        "user2@example.com",
+                        "user3@example.com"
+                    ]
                 });
             setErrorMessage('');
             setSuccess(true);
-            setTimeout(() => {
-                refresh();
-            }, 500);
-            console.log(response.data);
-
+            setIsLoading(false);
+            const responseArray = response.data.split('\n');
+            setRequestResponse(responseArray);
+            
         } catch (err) {
-            if (err.response && err.response.status === 400) {
-                setErrorMessage("Too many requests. Please try again after 3 seconds");
+            setIsLoading(false);
+            if (err.response ) {
+                setErrorMessage(err.response.data);
             } else {
-                // Handle other errors if necessary
                 setErrorMessage("An unexpected error occurred. Please try again.");
             }
         }
@@ -106,11 +116,36 @@ export default function NewTask({update, taskWindow}) {
                             {errorMessage}
                         </Typography>
                     )}
+                    <Box>
+                        {requestResponse.map((message, index) => (
+                            <Typography
+                                key={index}
+                                sx={{
+                                    color: message.includes("successfully added") ? "green" : "red",
+                                    marginBottom: 1
+                                }}
+                            >
+                                {message}
+                            </Typography>
+                        ))}
+                    </Box>
                 </Grid>
                 <Grid item sx={{mt: 2, display: 'flex', justifyContent: 'flex-end'}}>
-                    <StyledButton variant="contained" color="primary" onClick={addNewTask}>
-                        Add task
-                    </StyledButton>
+                    {!isLoading && !success && (
+                        <StyledButton variant="contained" color="primary" onClick={addNewPublicTask}>
+                            Add public task
+                        </StyledButton>
+                    )}
+                    {isLoading && !success && (
+                        <StyledButton variant="contained" color="primary" disabled>
+                            Loading ...
+                        </StyledButton>
+                    )}
+                    {!isLoading && success && (
+                        <StyledButton variant="contained" color="primary" onClick={refresh}>
+                            Continue
+                        </StyledButton>
+                    )}
                 </Grid>
                 {success && (
                     <Grid item sx={{mt: 3, display: 'flex', justifyContent: 'flex-end'}}>

@@ -160,7 +160,7 @@ const Tasks = ({update}) => {
             {!isEmpty && (
                 <List disablePadding>
                     {tasks.map((item, index) => (
-                        <div key={item.id}>
+                        <div key={index}>
                             <Typography variant="body2" color={theme.palette.secondary.red}
                                         sx={{
                                             mt: 2,

@@ -50,6 +50,8 @@ public class TaskService {
                 .createdAt(LocalDateTime.now())
                 .taskSession(Collections.emptyList())
                 .spentTime(0L)
+                .createdBy(connectedUser.getName())
+                .taskType(TaskType.PRIVATE)
                 .build();
         taskRepository.save(task);
     }

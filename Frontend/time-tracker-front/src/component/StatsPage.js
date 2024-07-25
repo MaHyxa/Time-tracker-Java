@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import useAxiosPrivate from "../api/useAxiosPrivate";
 
 
-const formatTime = (milliseconds) => {
+export const formatTime = (milliseconds) => {
     // Convert milliseconds to seconds
     let totalSeconds = milliseconds / 1000;
 

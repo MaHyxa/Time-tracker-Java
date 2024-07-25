@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.MaHyxa</groupId>
 	<artifactId>time-tracker</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>time-tracker-api</name>
 	<description>Pet project allowing to create tasks and track amount of time, which you spent on each of them.</description>
 	<properties>

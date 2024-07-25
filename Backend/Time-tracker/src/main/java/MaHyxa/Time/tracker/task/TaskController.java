@@ -44,22 +44,22 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
     }
 
-    @PatchMapping("my-tasks/startTask")
+    @PatchMapping("/my-tasks/startTask")
     public ResponseEntity<Task> startTask(@RequestBody Long requestBody, Authentication connectedUser) {
         return ResponseEntity.ok(taskService.startTime(requestBody, connectedUser));
     }
 
-    @PatchMapping("my-tasks/stopTask")
+    @PatchMapping("/my-tasks/stopTask")
     public ResponseEntity<Task> stopTask(@RequestBody Long requestBody, Authentication connectedUser) {
         return ResponseEntity.ok(taskService.stopTime(requestBody, connectedUser));
     }
 
-    @PatchMapping("my-tasks/completeTask")
+    @PatchMapping("/my-tasks/completeTask")
     public ResponseEntity<Task> completeTask(@RequestBody Long requestBody, Authentication connectedUser) {
         return ResponseEntity.ok(taskService.completeTask(requestBody, connectedUser));
     }
 
-    @DeleteMapping("my-tasks/deleteTask")
+    @DeleteMapping("/my-tasks/deleteTask")
     public ResponseEntity<Void> deleteTask(@RequestBody Long requestBody, Authentication connectedUser) {
         taskService.deleteTask(requestBody, connectedUser);
         return ResponseEntity.noContent().build();
