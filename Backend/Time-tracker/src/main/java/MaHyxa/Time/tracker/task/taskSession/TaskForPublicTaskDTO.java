@@ -20,7 +20,7 @@ public class TaskForPublicTaskDTO {
 
     private String userEmail;
 
-    private boolean isComplete;
+    private int taskStatus;
 
     private String answer;
 }

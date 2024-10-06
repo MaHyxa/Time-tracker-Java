@@ -9,14 +9,14 @@ RUN mvn clean package -DskipTests
 # Runtime stage
 FROM amazoncorretto:17
 ARG PROFILE=default
-ARG APP_VERSION=1.0.0
+ARG APP_VERSION=1.0.1
 
 WORKDIR /app
 COPY --from=build /build/target/time-tracker-*.jar /app/
 
 EXPOSE 9192
 
-ENV DB_URL=jdbc:mysql://mysql-time-tracker:3306/time_tracker
+ENV DB_URL=jdbc:mysql://mysql:3306/time_tracker
 ENV ACTIVE_PROFILE=${PROFILE}
 ENV JAR_VERSION=${APP_VERSION}
 

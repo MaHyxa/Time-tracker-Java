@@ -1,7 +1,6 @@
 package MaHyxa.Time.tracker.friends;
 
-import MaHyxa.Time.tracker.config.databases.keycloak.UserRepositoryCustom;
-import MaHyxa.Time.tracker.task.Task;
+import MaHyxa.Time.tracker.config.KeycloakService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -9,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,32 +17,32 @@ import java.util.stream.Collectors;
 public class FriendsService {
 
     private final FriendsRepository friendsRepository;
-    private final UserRepositoryCustom userRepositoryCustom;
+    private final KeycloakService keycloakService;
 
-    private Friends.Status isFriends(String friendOne, String friendTwo) {
-        return friendsRepository.checkFriends(friendOne, friendTwo);
+    private RelationshipStatus isFriends(String user, String requestedBy) {
+        return friendsRepository.checkFriends(user, requestedBy);
     }
 
     public ResponseEntity<String> addFriend(JsonNode email, Authentication connectedUser) {
-        String friendOne = userRepositoryCustom.getUserEmailById(connectedUser.getName());
-        String friendTwo = userRepositoryCustom.getUserEmail(email.get("email").asText());
+        String requestedBy = connectedUser.getName();
+        String user = keycloakService.getUserIdByEmail(email.get("email").asText());
 
-        if (friendTwo != null && friendOne != null) {
-            if (friendOne.equals(friendTwo)) {
+        if (requestedBy != null && user != null) {
+            if (user.equals(requestedBy)) {
                 return new ResponseEntity<>("You can't connect to yourself", HttpStatus.BAD_REQUEST);
             }
 
-            if (isFriends(friendOne, friendTwo) == Friends.Status.ONE) {
+            if (isFriends(user, requestedBy) == RelationshipStatus.ACCEPTED) {
                 return new ResponseEntity<>("You are already connected with this user.", HttpStatus.CONFLICT);
             }
-            else if (isFriends(friendOne, friendTwo) == Friends.Status.ZERO) {
+
+            if (isFriends(user, requestedBy) == RelationshipStatus.PENDING) {
                 return new ResponseEntity<>("You've already sent request to this user. Please wait for acceptance.", HttpStatus.CONFLICT);
-            }
-            else {
+            } else {
                 Friends friend = Friends.builder()
-                        .friendOne(friendOne)
-                        .friendTwo(friendTwo)
-                        .status(Friends.Status.ZERO)
+                        .user(user)
+                        .requestedBy(requestedBy)
+                        .status(RelationshipStatus.PENDING)
                         .build();
                 friendsRepository.save(friend);
                 return new ResponseEntity<>("Request successfully sent.", HttpStatus.OK);
@@ -56,15 +54,15 @@ public class FriendsService {
 
 
     public List<FriendsDTO> getAllFriendsByUser(Authentication connectedUser) {
-        String user = userRepositoryCustom.getUserEmailById(connectedUser.getName());
+        String user = connectedUser.getName();
         List<Friends> temp = friendsRepository.getAllFriendsByUser(user);
 
         List<FriendsDTO> friendNames = temp.stream()
                 .map(friend -> FriendsDTO.builder()
-//                        .friend(friend.getFriendOne().equals(user) ? friend.getFriendTwo() : friend.getFriendOne())
-                        .friendOne(friend.getFriendOne())
-                        .friendTwo(friend.getFriendTwo())
-                        .status(friend.getStatus().ordinal())
+                        .friend(friend.getUser().equals(user) ? keycloakService.getUserEmailById(friend.getRequestedBy()) : keycloakService.getUserEmailById(friend.getUser()))
+                        .status(friend.getStatus().equals(RelationshipStatus.PENDING) ?
+                                (friend.getRequestedBy().equals(user) ? RelationshipStatus.PENDING.ordinal() : RelationshipStatus.REQUESTED.ordinal()) :
+                                friend.getStatus().ordinal())
                         .build())
                 .collect(Collectors.toList());
         return friendNames;
@@ -72,37 +70,38 @@ public class FriendsService {
 
 
     public ResponseEntity<?> acceptConnect(JsonNode requestBody, Authentication connectedUser) {
-        String user = userRepositoryCustom.getUserEmailById(connectedUser.getName());
-        String sender = requestBody.asText();
+        String user = connectedUser.getName();
+        String friendEmail = requestBody.asText();
+        String requestedBy = keycloakService.getUserIdByEmail(friendEmail);
         List<Friends> temp = friendsRepository.getAllFriendsByUser(user);
         Optional<Friends> found = temp.stream()
-                .filter(friend -> friend.getFriendOne().equals(sender) && friend.getFriendTwo().equals(user))
+                .filter(friend -> friend.getUser().equals(user) && friend.getRequestedBy().equals(requestedBy) && friend.getStatus().equals(RelationshipStatus.PENDING))
                 .findFirst();
 
         try {
             if (found.isPresent()) {
                 Friends foundFriend = found.get();
-                foundFriend.setStatus(Friends.Status.ONE);
+                foundFriend.setStatus(RelationshipStatus.ACCEPTED);
                 friendsRepository.save(foundFriend);
                 FriendsDTO friendsDTO = FriendsDTO.builder()
-                        .friendOne(foundFriend.getFriendOne())
-                        .friendTwo(foundFriend.getFriendTwo())
+                        .friend(friendEmail)
                         .status(foundFriend.getStatus().ordinal())
                         .build();
                 return ResponseEntity.ok().body(friendsDTO);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection wasn't found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection request wasn't found or connection already established");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error accepting friend request.");
         }
     }
+
     public ResponseEntity<?> rejectConnect(JsonNode requestBody, Authentication connectedUser) {
-        String user = userRepositoryCustom.getUserEmailById(connectedUser.getName());
-        String sender = requestBody.asText();
+        String user = connectedUser.getName();
+        String requestedBy = keycloakService.getUserIdByEmail(requestBody.asText());
         List<Friends> temp = friendsRepository.getAllFriendsByUser(user);
         Optional<Friends> found = temp.stream()
-                .filter(friend -> (friend.getFriendOne().equals(sender) && friend.getFriendTwo().equals(user)) || (friend.getFriendTwo().equals(sender) && friend.getFriendOne().equals(user)))
+                .filter(friend -> (friend.getUser().equals(user) && friend.getRequestedBy().equals(requestedBy)) || (friend.getUser().equals(requestedBy) && friend.getRequestedBy().equals(user)))
                 .findFirst();
 
         try {

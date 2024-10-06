@@ -32,4 +32,14 @@ public class PublicTaskController {
             return publicTaskService.addPublicTask(publicTask, connectedUser);
         }
     }
+
+    @DeleteMapping("/my-tasks/deletePublicTask")
+    public ResponseEntity<?> deleteTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        if (requestBody == null) {
+            return new ResponseEntity<>("You can't delete task without id", HttpStatus.BAD_REQUEST);
+        }
+        else {
+            return publicTaskService.deleteTask(requestBody, connectedUser);
+        }
+    }
 }

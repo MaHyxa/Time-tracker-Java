@@ -17,6 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 public class PublicTaskDTO {
 
+    private Long id;
+
     private String taskName;
 
     private LocalDateTime createdAt;

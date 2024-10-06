@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FriendsDTO {
 
-    private String friendOne;
-
-    private String friendTwo;
+    private String friend;
 
     private int status;
 

@@ -2,12 +2,14 @@ package MaHyxa.Time.tracker.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -40,29 +42,38 @@ public class TaskController {
     }
 
     @GetMapping("/my-tasks")
-    public ResponseEntity<List<Task>> getAllTasksByUserId(Authentication connectedUser) {
+    public ResponseEntity<List<PersonalTaskDTO>> getAllTasksByUserId(Authentication connectedUser) {
         return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
     }
 
     @PatchMapping("/my-tasks/startTask")
-    public ResponseEntity<Task> startTask(@RequestBody Long requestBody, Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.startTime(requestBody, connectedUser));
+    public ResponseEntity<?> startTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.startTime(requestBody, connectedUser);
     }
 
     @PatchMapping("/my-tasks/stopTask")
-    public ResponseEntity<Task> stopTask(@RequestBody Long requestBody, Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.stopTime(requestBody, connectedUser));
+    public ResponseEntity<?> stopTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.stopTime(requestBody, connectedUser);
     }
 
     @PatchMapping("/my-tasks/completeTask")
-    public ResponseEntity<Task> completeTask(@RequestBody Long requestBody, Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.completeTask(requestBody, connectedUser));
+    public ResponseEntity<?> completeTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.completeTask(requestBody, connectedUser);
+    }
+
+    @PatchMapping("/my-tasks/acceptTask")
+    public ResponseEntity<?> acceptTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.acceptTask(requestBody, connectedUser);
+    }
+
+    @PatchMapping("/my-tasks/rejectTask")
+    public ResponseEntity<?> rejectTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.rejectTask(requestBody, connectedUser);
     }
 
     @DeleteMapping("/my-tasks/deleteTask")
-    public ResponseEntity<Void> deleteTask(@RequestBody Long requestBody, Authentication connectedUser) {
-        taskService.deleteTask(requestBody, connectedUser);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteTask(@RequestBody Long requestBody, Authentication connectedUser) {
+        return taskService.deleteTask(requestBody, connectedUser);
     }
 
     @PostMapping("/my-tasks/findByDates")

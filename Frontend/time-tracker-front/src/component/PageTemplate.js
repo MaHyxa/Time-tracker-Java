@@ -114,7 +114,7 @@ export default function Template({ children }) {
                         backgroundColor: '#fff',
                         backgroundImage: 'radial-gradient(circle at 200% 300%, #2d8cff, #fff 82%), radial-gradient(circle at 50% 0, rgba(239, 152, 207, .2), rgba(0, 0, 0, 0) 57%), radial-gradient(circle at 0 20%, rgba(122, 167, 255, .25), rgba(0, 0, 0, 0) 42%)',
                         flexGrow: 1,
-                        height: '86.7vh',
+                        height: 'calc(100vh - 120px)',
                         overflow: 'auto',
                     }}
                 >

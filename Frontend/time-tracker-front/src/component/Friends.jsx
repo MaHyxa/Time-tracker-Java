@@ -4,32 +4,28 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemButton from "@mui/material/ListItemButton";
-import IconButton from "@mui/material/IconButton";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 
-import {theme, formatDate, formatMilliseconds} from './PageTemplate';
+import {theme} from './PageTemplate';
 import Grid from "@mui/material/Grid";
 import useAxiosPrivate from "../api/useAxiosPrivate";
-import getEmailFromToken from "../api/getEmailFromToken";
+import useFriends from '../api/useFriends';
 
 
 const Friends = ({update}) => {
 
     const axiosPrivate = useAxiosPrivate();
-    const [friends, setFriends] = useState([]);
-    const [isEmpty, setIsEmpty] = useState(false);
+    const { friends, isEmpty, loadFriends, setFriends } = useFriends();
     const [isHovered, setIsHovered] = useState(false);
     const [refresh, setRefresh] = useState(false);
-    const userEmail = getEmailFromToken();
+    // const userEmail = getEmailFromToken();
 
 
     const startButtonStyle = {
         minWidth: '90px',
-        maxWidth: '10%',
+        maxWidth: '90px',
         maxHeight: 40,
-        marginRight: 2,
         borderRadius: 2,
         color: "white",
         textTransform: "none",
@@ -44,7 +40,7 @@ const Friends = ({update}) => {
 
     const completeButtonStyle = {
         minWidth: '90px',
-        maxWidth: '10%',
+        maxWidth: '90px',
         maxHeight: 40,
         borderRadius: 2,
         bgcolor: theme.palette.primary.blue,
@@ -59,60 +55,21 @@ const Friends = ({update}) => {
         }
     };
 
-    //any changes in "update" will trigger useEffect
     useEffect(() => {
         loadFriends();
-    }, [update, refresh]);
-    const loadFriends = async () => {
-        try {
-            const response = await axiosPrivate.get('/api/v1/friends/my-friends');
-            if (response.data && response.data.length > 0) {
-                setFriends(response.data);
-                setIsEmpty(false);
-            } else {
-                setIsEmpty(true);
-            }
+    }, [loadFriends, update, refresh]);
 
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    }
-
-    const startTimeCount = async (id, e, index) => {
-        if (e) {
-            e.preventDefault();
-        }
-        try {
-            const response = await axiosPrivate.patch('/api/v1/tasks/my-tasks/startTask', id.toString());
-            friends[index] = response.data;
-            setFriends([...friends]);
-
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    }
-
-    const stopTimeCount = async (id, e, index) => {
-        if (e) {
-            e.preventDefault();
-        }
-        try {
-            const response = await axiosPrivate.patch('/api/v1/tasks/my-tasks/stopTask', id.toString());
-            friends[index] = response.data;
-            setFriends([...friends]);
-
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    }
     const acceptConnect = async (friend, e, index) => {
         if (e) {
             e.preventDefault();
         }
         try {
             const response = await axiosPrivate.patch('/api/v1/friends/my-friends/acceptConnect', friend.toString());
-            friends[index] = response.data;
-            setFriends([...friends]);
+            const updatedFriend = response.data;
+
+            setFriends(prevFriends =>
+                prevFriends.map((f, i) => (i === index ? updatedFriend : f))
+            );
 
         } catch (err) {
             setRefresh(!refresh);
@@ -129,38 +86,23 @@ const Friends = ({update}) => {
                 data: friend
             });
             if (response.status === 204) {
-                setRefresh(!refresh);
-                friends.splice(index, 1);
-                setFriends([...friends]);
+                setFriends(prevFriends =>
+                    prevFriends.filter((_, i) => i !== index)
+                );
             } else {
-                return console.error("Something wrong")
+                return console.error("Something went wrong")
             }
 
         } catch (err) {
             setRefresh(!refresh);
-            console.error('Error:', err);
+            if (err.response) {
+                console.error('Error response:', err.response);
+            } else {
+                console.error('Error:', err);
+            }
         }
     }
 
-    const deleteTask = async (id, e, index) => {
-        if (e) {
-            e.preventDefault();
-        }
-        try {
-            const response = await axiosPrivate.delete('/api/v1/tasks/my-tasks/deleteTask', {
-                data: id
-            });
-            if (response.status === 204) {
-                setRefresh(!refresh);
-                friends.splice(index, 1);
-                setFriends([...friends]);
-            } else {
-                return console.error("Something wrong")
-            }
-        } catch (err) {
-            console.error('Error:', err);
-        }
-    }
 
     return (
         <React.Fragment>
@@ -199,14 +141,12 @@ const Friends = ({update}) => {
                                     borderRadius: 1,
                                     position: 'relative',
                                     border: '1px solid #ccc',
-                                    backgroundImage: item.complete ? `url(${process.env.PUBLIC_URL}/blue.jpg)` : 'none',
-                                    backgroundSize: 'cover',
                                 }}
                             >
                                 <Grid container spacing={1}>
-                                    <Grid item xs={12} sm={6} md={10}>
+                                    <Grid item xs={12} sm={9} md={9}>
                                         <ListItemText
-                                            primary={item.friendOne === userEmail ? item.friendTwo : item.friendOne}
+                                            primary={item.friend}
                                             primaryTypographyProps={{
                                                 sx: {
                                                     overflowWrap: 'break-word',
@@ -216,70 +156,103 @@ const Friends = ({update}) => {
                                                     whiteSpace: 'pre-wrap'
                                                 }
                                             }}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: {
+                                                    xs: 'center',
+                                                    sm: 'flex-start'
+                                                }
+                                            }}
                                         />
                                     </Grid>
-                                    <Grid item xs={6} md={2} sx={{ display: 'flex', alignItems: 'center' }}>
 
-                                        {item.status === 0 && item.friendTwo === userEmail && (
-                                            <ListItemButton
-                                                sx={{
-                                                    ...startButtonStyle,
-                                                    bgcolor: theme.palette.primary.main,
-                                                }}
-                                                variant="contained"
-                                                onClick={(e) => acceptConnect(item.friendOne, e, index)}
-                                            >
-                                                Accept
-                                            </ListItemButton>
-                                        )}
+                                    <Grid item xs={12} sm={3} md={3}>
+                                        <Grid container spacing={{ xs: 1, sm: 2 }} sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: {
+                                                xs: 'center',
+                                                sm: 'flex-end'
+                                            }
+                                        }}>
 
-                                        {item.status === 0 && item.friendTwo === userEmail && (
-                                            <ListItemButton
-                                                sx={{
-                                                    ...completeButtonStyle,
-                                                }}
-                                                variant="outlined"
-                                                onClick={(e) => rejectConnect(item.friendOne, e, index)}
-                                            >
-                                                Reject
-                                            </ListItemButton>
-                                        )}
+                                            <Grid item sx={{display: 'flex', alignItems: 'center'}}>
+                                                {item.status === 1 && (
+                                                    <ListItemButton
+                                                        sx={{
+                                                            ...startButtonStyle,
+                                                            bgcolor: theme.palette.primary.main,
+                                                        }}
+                                                        variant="contained"
+                                                        onClick={(e) => acceptConnect(item.friend, e, index)}
+                                                    >
+                                                        Accept
+                                                    </ListItemButton>
+                                                )}
+                                            </Grid>
+                                            <Grid item sx={{display: 'flex', alignItems: 'center'}}>
+                                                {item.status === 1 && (
+                                                    <ListItemButton
+                                                        sx={{
+                                                            ...completeButtonStyle,
+                                                            bgcolor: theme.palette.secondary.main,
+                                                            "&:hover": {
+                                                                bgcolor: theme.palette.secondary.red,
+                                                            },
+                                                        }}
+                                                        variant="outlined"
+                                                        onClick={(e) => rejectConnect(item.friend, e, index)}
+                                                    >
+                                                        Reject
+                                                    </ListItemButton>
+                                                )}
 
-                                        {item.status === 0 && item.friendOne === userEmail && isHovered !== index && (
-                                            <ListItemButton
-                                                sx={{
-                                                    ...completeButtonStyle,
-                                                }}
-                                                variant="outlined" disabled
-                                            >
-                                                Pending
-                                            </ListItemButton>
-                                        )}
+                                                {item.status === 0 && isHovered !== index && (
+                                                    <ListItemButton
+                                                        sx={{
+                                                            ...completeButtonStyle,
+                                                        }}
+                                                        variant="outlined" disabled
+                                                    >
+                                                        Pending
+                                                    </ListItemButton>
+                                                )}
 
-                                        {item.status === 0 && item.friendOne === userEmail && isHovered === index && (
-                                            <ListItemButton
-                                                sx={{
-                                                    ...completeButtonStyle,
-                                                }}
-                                                variant="outlined"
-                                                onClick={(e) => rejectConnect(item.friendTwo, e, index)}
-                                            >
-                                                Cancel
-                                            </ListItemButton>
-                                        )}
+                                                {item.status === 0 && isHovered === index && (
+                                                    <ListItemButton
+                                                        sx={{
+                                                            ...completeButtonStyle,
+                                                            bgcolor: theme.palette.secondary.main,
+                                                            "&:hover": {
+                                                                bgcolor: theme.palette.secondary.red,
+                                                            },
+                                                        }}
+                                                        variant="outlined"
+                                                        onClick={(e) => rejectConnect(item.friend, e, index)}
+                                                    >
+                                                        Cancel
+                                                    </ListItemButton>
+                                                )}
 
-                                        {item.status === 1 && (
-                                            <ListItemButton
-                                                sx={{
-                                                    ...completeButtonStyle,
-                                                }}
-                                                variant="outlined"
-                                                onClick={(e) => rejectConnect(item.friendOne === userEmail ? item.friendTwo : item.friendOne, e, index)}
-                                            >
-                                                Disconnect
-                                            </ListItemButton>
-                                        )}
-
+                                                {item.status === 2 && (
+                                                    <ListItemButton
+                                                        sx={{
+                                                            ...completeButtonStyle,
+                                                            bgcolor: theme.palette.secondary.main,
+                                                            "&:hover": {
+                                                                bgcolor: theme.palette.secondary.red,
+                                                            },
+                                                            fontSize: "12pt",
+                                                        }}
+                                                        variant="outlined"
+                                                        onClick={(e) => rejectConnect(item.friend, e, index)}
+                                                    >
+                                                        Disconnect
+                                                    </ListItemButton>
+                                                )}
+                                            </Grid>
+                                        </Grid>
                                     </Grid>
                                 </Grid>
                             </ListItem>

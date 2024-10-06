@@ -19,20 +19,14 @@ public class Friends {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long friendship;
 
-    @JoinColumn(name = "friend_one", nullable = false)
-    private String friendOne;
+    @JoinColumn(nullable = false)
+    private String user;
 
-    @JoinColumn(name = "friend_two", nullable = false)
-    private String friendTwo;
+    @JoinColumn(nullable = false)
+    private String requestedBy;
 
-    @Column(name = "status", columnDefinition = "TINYINT DEFAULT 0")
     @Enumerated(EnumType.ORDINAL)
-    private Status status;
-
-    public enum Status {
-        ZERO,
-        ONE,
-        TWO
-    }
+    @Column(nullable = false)
+    private RelationshipStatus status;
 
 }

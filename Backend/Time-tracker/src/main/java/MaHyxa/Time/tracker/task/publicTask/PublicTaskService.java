@@ -1,8 +1,12 @@
 package MaHyxa.Time.tracker.task.publicTask;
 
-import MaHyxa.Time.tracker.config.databases.keycloak.UserRepositoryCustom;
+import MaHyxa.Time.tracker.config.KeycloakService;
+import MaHyxa.Time.tracker.friends.Friends;
+import MaHyxa.Time.tracker.friends.FriendsRepository;
+import MaHyxa.Time.tracker.friends.RelationshipStatus;
 import MaHyxa.Time.tracker.task.Task;
 import MaHyxa.Time.tracker.task.TaskRepository;
+import MaHyxa.Time.tracker.task.TaskStatus;
 import MaHyxa.Time.tracker.task.TaskType;
 import MaHyxa.Time.tracker.task.taskSession.TaskForPublicTaskDTO;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,27 +18,26 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 @EnableScheduling
 @RequiredArgsConstructor
 public class PublicTaskService {
     private final PublicTaskRepository publicTaskRepository;
-    private final UserRepositoryCustom userRepositoryCustom;
     private final TaskRepository taskRepository;
+    private final FriendsRepository friendsRepository;
+    private final KeycloakService keycloakService;
 
 
     private List<TaskForPublicTaskDTO> getTasksForPublicTask(PublicTask publicTask) {
 
-        List<TaskForPublicTaskDTO> taskList = new ArrayList<>();
+        List<TaskForPublicTaskDTO> taskList = new LinkedList<>();
         for (Task t : publicTask.getAssignedTasks()) {
             TaskForPublicTaskDTO tpt = TaskForPublicTaskDTO.builder()
                     .userEmail(t.getUserEmail())
                     .completedAt(t.getCompletedAt())
-                    .isComplete(t.isComplete())
+                    .taskStatus(t.getTaskStatus().ordinal())
                     .answer(t.getAnswer())
                     .build();
             taskList.add(tpt);
@@ -49,9 +52,10 @@ public class PublicTaskService {
         if (userPublicTasks.isEmpty())
             return Collections.emptyList();
 
-        List<PublicTaskDTO> publicTasksList = new ArrayList<>();
+        List<PublicTaskDTO> publicTasksList = new LinkedList<>();
         for (PublicTask pt : userPublicTasks) {
             PublicTaskDTO ptDTO = PublicTaskDTO.builder()
+                    .id(pt.getId())
                     .taskName(pt.getTaskName())
                     .isComplete(pt.isComplete())
                     .createdAt(pt.getCreatedAt())
@@ -63,35 +67,44 @@ public class PublicTaskService {
     }
 
     public ResponseEntity<String> addPublicTask(JsonNode publicTask, Authentication connectedUser) {
-        String owner = userRepositoryCustom.getUserEmailById(connectedUser.getName());
-        List<String> assignedUsersList = new ArrayList<>();
+
+        String owner = connectedUser.getName();
+        List<String> assignedUsersList = new LinkedList<>();
         JsonNode assignedUsers = publicTask.get("assignedUsers");
+
         if (assignedUsers.isArray()) {
             for (JsonNode userNode : assignedUsers) {
                 assignedUsersList.add(userNode.asText());
             }
         } else return new ResponseEntity<>("Assigned users must be a list of an Emails", HttpStatus.BAD_REQUEST);
 
-        List<String> responseList = new ArrayList<>();
-        List<Task> taskList = new ArrayList<>();
+        List<String> responseList = new LinkedList<>();
+        List<Task> taskList = new LinkedList<>();
+        List<Friends> ownerFriends = friendsRepository.getAllFriendsByUser(owner);
+
         for (String assignedUser : assignedUsersList) {
-            String foundUser = userRepositoryCustom.getUserIdByEmail(assignedUser);
-            if (foundUser != null) {
+
+            String assignerUserId = keycloakService.getUserIdByEmail(assignedUser);
+
+            Optional<Friends> findConnection = ownerFriends.stream()
+                    .filter(friend -> (friend.getUser().equals(owner) && friend.getRequestedBy().equals(assignerUserId))
+                            || (friend.getUser().equals(assignerUserId) && friend.getRequestedBy().equals(owner)))
+                    .findFirst();
+
+            if (findConnection.isPresent() && findConnection.get().getStatus() == RelationshipStatus.ACCEPTED) {
                 Task task = Task.builder()
                         .taskName(publicTask.get("taskName").asText())
-                        .userId(foundUser)
-                        .createdAt(LocalDateTime.now())
-                        .taskSession(Collections.emptyList())
-                        .spentTime(0L)
+                        .userId(findConnection.get().getUser().equals(owner) ? findConnection.get().getRequestedBy() : findConnection.get().getUser())
                         .userEmail(assignedUser)
                         .createdBy(owner)
                         .taskType(TaskType.ASSIGNED)
+                        .taskStatus(TaskStatus.PENDING)
                         .build();
                 taskRepository.save(task);
                 responseList.add("Task for user " + assignedUser + " was successfully added.");
                 taskList.add(task);
             } else {
-                responseList.add("User " + assignedUser + " was not found or is not your friend. Please try again.");
+                responseList.add("Task for user " + assignedUser + " was not created, because user was not found or is not your friend yet. Please try again.");
             }
         }
         String response = String.join("\n", responseList);
@@ -106,7 +119,21 @@ public class PublicTaskService {
             publicTaskRepository.save(pt);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("Public task wasn't created due to lack of participants.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Public task wasn't created due to lack of participants. You can assign tasks for already connected users only.", HttpStatus.NOT_FOUND);
         }
     }
+
+    public ResponseEntity<String> deleteTask(Long requestBody, Authentication connectedUser) {
+
+        PublicTask patchedTask = publicTaskRepository.findPublicTaskByUserIdAndId(connectedUser.getName(), requestBody);
+
+        if(patchedTask == null) {
+            return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
+        }
+
+        publicTaskRepository.delete(patchedTask);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

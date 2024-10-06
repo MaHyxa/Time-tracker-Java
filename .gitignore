@@ -12,3 +12,7 @@ realm-export.json
 test/index.html
 test/styles.css
 tt2
+Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/KeycloakConnection.java
+Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserController.java
+Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserRepositoryCustom.java
+Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserRepositoryCustomImpl.java

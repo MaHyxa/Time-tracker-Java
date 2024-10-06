@@ -3,15 +3,17 @@ import {useEffect, useState} from "react";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 
 import {theme, formatDate, formatTime} from './PageTemplate';
 import Grid from "@mui/material/Grid";
 import useAxiosPrivate from "../api/useAxiosPrivate";
-import getEmailFromToken from "../api/getEmailFromToken";
 import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
+import Button from "@mui/material/Button";
 
 
 const PublicTaskComp = ({update}) => {
@@ -21,89 +23,81 @@ const PublicTaskComp = ({update}) => {
     const [isEmpty, setIsEmpty] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [refresh, setRefresh] = useState(false);
-    const userEmail = getEmailFromToken();
+    // const userEmail = getEmailFromToken();
     const [openIndex, setOpenIndex] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
+
 
     const openTask = (index) => {
         setOpenIndex(openIndex === index ? null : index);
     };
 
-
-    const startButtonStyle = {
-        minWidth: '90px',
-        maxWidth: '10%',
-        maxHeight: 40,
-        marginRight: 2,
-        borderRadius: 2,
-        color: "white",
-        textTransform: "none",
-        fontSize: "13pt",
-        justifyContent: "center",
-        fontWeight: "bold",
-        position: 'relative',
-        "&:hover": {
-            bgcolor: theme.palette.primary.dark,
-        }
+    const handleOpenDialog = () => {
+        setOpenDialog(!openDialog);
     };
 
-    const completeButtonStyle = {
-        minWidth: '90px',
-        maxWidth: '10%',
-        maxHeight: 40,
-        borderRadius: 2,
-        bgcolor: theme.palette.primary.blue,
-        color: "white",
-        textTransform: "none",
-        fontSize: "13pt",
-        justifyContent: "center",
-        fontWeight: "bold",
-        position: 'relative',
-        "&:hover": {
-            bgcolor: theme.palette.primary.darkblue,
-        }
+    const handleConfirm = (id, e, index) => {
+        deletePublicTask(id, e, index);
+        setOpenDialog(false);
     };
 
-    //any changes in "update" will trigger useEffect
+    const DeleteConfirmationDialog = ({openDialog, handleClose, handleConfirm}) => (
+        <Dialog
+            open={openDialog}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+            <DialogTitle id="alert-dialog-title">{"Confirm Deletion"}</DialogTitle>
+            <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                    Are you sure you want to delete this task? Doing so will also delete this task for assigned users.
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} color="primary">
+                    Cancel
+                </Button>
+                <Button onClick={handleConfirm} color="primary">
+                    Delete
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+
+
     useEffect(() => {
         loadPublicTasks();
     }, [update, refresh]);
+
     const loadPublicTasks = async () => {
         try {
             const response = await axiosPrivate.get('/api/v1/public-tasks/my-tasks');
-            if (response.data && response.data.length > 0) {
-                setPublicTasks(response.data);
+
+            const publicTasksData = Array.isArray(response.data) ? response.data : [];
+
+            if (publicTasksData.length > 0) {
+                setPublicTasks(publicTasksData);
                 setIsEmpty(false);
             } else {
                 setIsEmpty(true);
+                setPublicTasks([]);
             }
 
         } catch (err) {
+            setPublicTasks([]);
             console.error('Error:', err);
         }
-    }
+    };
 
-    const acceptConnect = async (friend, e, index) => {
+
+    const deletePublicTask = async (id, e, index) => {
         if (e) {
             e.preventDefault();
         }
         try {
-            const response = await axiosPrivate.patch('/api/v1/friends/my-friends/acceptConnect', friend.toString());
-            publicTasks[index] = response.data;
-            setPublicTasks([...publicTasks]);
-
-        } catch (err) {
-            setRefresh(!refresh);
-            console.error('Error:', err);
-        }
-    }
-
-    const rejectConnect = async (friend, e, index) => {
-        if (e) {
-            e.preventDefault();
-        }
-        try {
-            const response = await axiosPrivate.delete('/api/v1/friends/my-friends/rejectConnect', {
-                data: friend
+            const response = await axiosPrivate.delete('/api/v1/public-tasks/my-tasks/deletePublicTask', {
+                data: id.toString()
             });
             if (response.status === 204) {
                 setRefresh(!refresh);
@@ -112,9 +106,7 @@ const PublicTaskComp = ({update}) => {
             } else {
                 return console.error("Something wrong")
             }
-
         } catch (err) {
-            setRefresh(!refresh);
             console.error('Error:', err);
         }
     }
@@ -142,6 +134,7 @@ const PublicTaskComp = ({update}) => {
             )}
             {!isEmpty && (
                 <List disablePadding>
+
                     {publicTasks.map((item, index) => (
                         <div key={index}>
                             <Typography variant="body2" color={theme.palette.secondary.red}
@@ -154,7 +147,6 @@ const PublicTaskComp = ({update}) => {
                             <ListItem
                                 onMouseEnter={() => setIsHovered(index)}
                                 onMouseLeave={() => setIsHovered(null)}
-                                onClick={() => openTask(index)}
                                 sx={{
                                     '&:hover': {
                                         backgroundColor: '#f2f2f2',
@@ -165,13 +157,36 @@ const PublicTaskComp = ({update}) => {
                                     borderRadius: 1,
                                     position: 'relative',
                                     border: '1px solid #ccc',
-                                    backgroundImage: item.complete ? `url(${process.env.PUBLIC_URL}/blue.jpg)` : 'none',
+                                    backgroundImage: item.assignedTasks.filter(task => task.taskStatus === 6).length === item.assignedTasks.length
+                                        ? `url(${process.env.PUBLIC_URL}/blue.jpg)`
+                                        : 'none',
                                     backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat',
                                     cursor: 'pointer'
                                 }}
                             >
-                                <Grid container>
-                                    <Grid item xs={8}
+                                {isHovered === index && (
+                                    <IconButton
+                                        sx={{
+                                            position: 'absolute',
+                                            top: -20,
+                                            right: -20,
+                                            color: 'red',
+                                        }}
+                                        onClick={handleOpenDialog}
+                                    >
+                                        <RemoveCircleIcon style={{fontSize: '115%'}}/>
+                                        <DeleteConfirmationDialog
+                                            openDialog={openDialog}
+                                            handleClose={handleOpenDialog}
+                                            handleConfirm={(e) => handleConfirm(item.id, e, index)}
+                                        />
+                                    </IconButton>
+                                )}
+
+                                <Grid container onClick={() => openTask(index)}>
+                                    <Grid item xs={12} sm={9}
                                           sx={{
                                               display: 'flex',
                                               justifyContent: 'center',
@@ -185,28 +200,36 @@ const PublicTaskComp = ({update}) => {
                                                     wordWrap: 'break-word',
                                                     hyphens: 'auto',
                                                     whiteSpace: 'pre-wrap',
-                                                    textAlign: 'left',
+                                                    textAlign: {
+                                                        xs: 'center',
+                                                        sm: 'left'
+                                                    },
                                                     fontWeight: 'bold',
                                                     fontSize: '1.2rem'
                                                 }
                                             }}
                                         />
                                     </Grid>
-                                    <Grid item xs={4}
+                                    <Grid item xs={12} sm={3}
                                           sx={{
                                               display: 'flex',
-                                              justifyContent: 'right',
+                                              justifyContent: {
+                                                  xs: 'center',
+                                                  sm: 'right'
+                                              },
                                               alignItems: 'center',
                                           }}>
+
                                         <ListItemText
-                                            primary={`Completed: ${item.assignedTasks.filter(task => task.complete).length} / ${item.assignedTasks.length}`}
+                                            primary={`Completed: ${item.assignedTasks.filter(task => task.taskStatus === 6).length} / ${item.assignedTasks.length}`}
                                             primaryTypographyProps={{
                                                 sx: {
-                                                    overflowWrap: 'break-word',
-                                                    wordWrap: 'break-word',
                                                     hyphens: 'auto',
                                                     whiteSpace: 'pre-wrap',
-                                                    textAlign: 'right',
+                                                    textAlign: {
+                                                        xs: 'center',
+                                                        sm: 'right'
+                                                    },
                                                     fontWeight: 'bold',
                                                     fontSize: '1.2rem'
                                                 }
@@ -214,7 +237,7 @@ const PublicTaskComp = ({update}) => {
                                         />
                                     </Grid>
                                     {openIndex === index && (
-                                        <Grid container xs={12}
+                                        <Grid container
                                               sx={{
                                                   mt: 2,
                                                   display: 'flex',
@@ -222,35 +245,39 @@ const PublicTaskComp = ({update}) => {
                                                   alignItems: 'center',
                                               }}>
                                             <Grid item xs={12}>
-                                            <Divider
-                                                sx={{
-                                                    borderColor: 'lightgrey',
-                                                    borderWidth: '1px',
-                                                    width: '85%',
-                                                    mx: 'auto',
-                                                    borderRadius: '10px'
-                                                }}
-                                            />
+                                                <Divider
+                                                    sx={{
+                                                        borderColor: 'lightgrey',
+                                                        borderWidth: '1px',
+                                                        width: '85%',
+                                                        mx: 'auto',
+                                                        borderRadius: '10px'
+                                                    }}
+                                                />
                                             </Grid>
                                             {item.assignedTasks.map((task, index) => (
                                                 <Grid container key={index} sx={{
                                                     mt: 1,
                                                     borderRadius: 1,
                                                     border: '1px solid #ccc',
-                                                    backgroundColor: task.complete ? 'rgba(5,190,5,0.64)' : 'rgba(255,0,0,0.64)',
+                                                    backgroundColor:
+                                                        task.taskStatus === 3 ? 'rgba(255,224,70,0.8)' :
+                                                            task.taskStatus === 5 ? 'rgba(255,0,0,0.64)' :
+                                                                task.taskStatus === 6 ? '#1976d2' :
+                                                                    'rgba(0,255,0,0.64)',
                                                 }}>
                                                     <Grid item xs={12} md={6}
-                                                        sx={{
-                                                        display: 'flex',
-                                                        justifyContent: 'left',
-                                                        alignItems: 'center',
-                                                    }}>
+                                                          sx={{
+                                                              display: 'flex',
+                                                              justifyContent: 'left',
+                                                              alignItems: 'center',
+                                                          }}>
                                                         <Typography
                                                             sx={{
                                                                 mt: 1,
                                                                 ml: 3,
                                                                 marginBottom: 1,
-                                                                color: task.complete ? 'black' : 'white',
+                                                                color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
                                                             }}
                                                         >
                                                             {task.userEmail}
@@ -268,93 +295,30 @@ const PublicTaskComp = ({update}) => {
                                                         <Typography
                                                             sx={{
                                                                 mt: 1,
-                                                                mr: { xs: 0, md: 3 },
-                                                                ml: { xs: 3, md: 0 },
+                                                                mr: {xs: 0, md: 3},
+                                                                ml: {xs: 3, md: 0},
                                                                 marginBottom: 1,
-                                                                color: task.complete ? 'black' : 'white',
+                                                                color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
                                                             }}
                                                         >
-                                                            {task.complete ? `Completed ${formatTime(task.completedAt)}` : 'Not done yet'}
+                                                            {task.taskStatus === 3 ? 'Waiting for acceptance' :
+                                                                task.taskStatus === 5 ? 'Rejected' :
+                                                                    task.taskStatus === 6 ? `Completed ${formatTime(task.completedAt)}` :
+                                                                        'In progress'}
                                                         </Typography>
                                                     </Grid>
                                                 </Grid>
                                             ))}
                                         </Grid>
                                     )}
-
-
-
-                                <Grid item xs={6} md={2} sx={{display: 'flex', alignItems: 'center'}}>
-
-                                    {item.status === 0 && item.friendTwo === userEmail && (
-                                        <ListItemButton
-                                            sx={{
-                                                ...startButtonStyle,
-                                                bgcolor: theme.palette.primary.main,
-                                            }}
-                                            variant="contained"
-                                            onClick={(e) => acceptConnect(item.friendOne, e, index)}
-                                        >
-                                            Accept
-                                        </ListItemButton>
-                                    )}
-
-                                    {item.status === 0 && item.friendTwo === userEmail && (
-                                        <ListItemButton
-                                            sx={{
-                                                ...completeButtonStyle,
-                                            }}
-                                            variant="outlined"
-                                            onClick={(e) => rejectConnect(item.friendOne, e, index)}
-                                        >
-                                            Reject
-                                        </ListItemButton>
-                                    )}
-
-                                    {item.status === 0 && item.friendOne === userEmail && isHovered !== index && (
-                                        <ListItemButton
-                                            sx={{
-                                                ...completeButtonStyle,
-                                            }}
-                                            variant="outlined" disabled
-                                        >
-                                            Pending
-                                        </ListItemButton>
-                                    )}
-
-                                    {item.status === 0 && item.friendOne === userEmail && isHovered === index && (
-                                        <ListItemButton
-                                            sx={{
-                                                ...completeButtonStyle,
-                                            }}
-                                            variant="outlined"
-                                            onClick={(e) => rejectConnect(item.friendTwo, e, index)}
-                                        >
-                                            Cancel
-                                        </ListItemButton>
-                                    )}
-
-                                    {item.status === 1 && (
-                                        <ListItemButton
-                                            sx={{
-                                                ...completeButtonStyle,
-                                            }}
-                                            variant="outlined"
-                                            onClick={(e) => rejectConnect(item.friendOne === userEmail ? item.friendTwo : item.friendOne, e, index)}
-                                        >
-                                            Disconnect
-                                        </ListItemButton>
-                                    )}
-
                                 </Grid>
-                            </Grid>
-                        </ListItem>
+                            </ListItem>
                         </div>
-                        ))}
+                    ))}
                 </List>
             )}
-</React.Fragment>
-)
-;
+        </React.Fragment>
+    )
+        ;
 }
 export default PublicTaskComp;

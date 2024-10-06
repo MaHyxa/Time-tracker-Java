@@ -4,12 +4,12 @@ import UserInfo from "./pages/UserInfo"
 import Reports from "./pages/Reports";
 import {LicenseInfo} from '@mui/x-license';
 import Home from "./pages/Home";
-import Login from "./leftovers/Login";
 import Page404 from "./pages/Page404";
 import {Routes, Route, BrowserRouter} from 'react-router-dom';
 import Layout from "./component/Layout";
 import PrivateRoute from "./component/PrivateRoute";
 import PublicTasks from "./pages/PublicTasks";
+import ConnectedUsers from "./pages/ConnectedUsers";
 
 LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENCE_KEY);
 
@@ -25,6 +25,7 @@ function App() {
                     {/* Protected routes */}
                     <Route element={<PrivateRoute/>}>
                         <Route path="my-info" element={<UserInfo/>}/>
+                        <Route path="connected-users" element={<ConnectedUsers/>}/>
                         <Route path="my-tasks" element={<TaskPage/>}/>
                         <Route path="reports" element={<Reports/>}/>
                         <Route path="public-tasks" element={<PublicTasks/>}/>
