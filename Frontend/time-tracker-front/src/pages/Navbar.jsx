@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {AppBar, Toolbar, IconButton, Typography, Button, Box, Backdrop} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {Link, useNavigate} from 'react-router-dom';
@@ -27,6 +27,12 @@ const Navbar = () => {
     const logout = async () => {
         await keycloak.logout();
     }
+
+    useEffect(() => {
+        if (loggedIn) {
+            handleOpen();
+        }
+    }, [loggedIn]);
 
     return (
         <AppBar position="static">

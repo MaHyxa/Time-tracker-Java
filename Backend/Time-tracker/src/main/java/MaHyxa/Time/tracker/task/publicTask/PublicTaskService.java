@@ -11,6 +11,8 @@ import MaHyxa.Time.tracker.task.TaskType;
 import MaHyxa.Time.tracker.task.taskSession.TaskForPublicTaskDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -46,29 +48,25 @@ public class PublicTaskService {
     }
 
 
-    public List<PublicTaskDTO> getAllPublicTasksByUser(Authentication connectedUser) {
+    public Page<PublicTaskDTO> getAllPublicTasksByUser(Authentication connectedUser, Pageable pageable) {
 
-        var userPublicTasks = publicTaskRepository.getAllPublicTasksByUser(connectedUser.getName());
+        var userPublicTasks = publicTaskRepository.getAllPublicTasksByUser(connectedUser.getName(), pageable);
         if (userPublicTasks.isEmpty())
-            return Collections.emptyList();
+            return Page.empty(pageable);
 
-        List<PublicTaskDTO> publicTasksList = new LinkedList<>();
-        for (PublicTask pt : userPublicTasks) {
-            PublicTaskDTO ptDTO = PublicTaskDTO.builder()
-                    .id(pt.getId())
-                    .taskName(pt.getTaskName())
-                    .isComplete(pt.isComplete())
-                    .createdAt(pt.getCreatedAt())
-                    .assignedTasks(getTasksForPublicTask(pt))
-                    .build();
-            publicTasksList.add(ptDTO);
-        }
-        return publicTasksList;
+        return userPublicTasks.map(pt -> PublicTaskDTO.builder()
+                .id(pt.getId())
+                .taskName(pt.getTaskName())
+                .isComplete(pt.isComplete())
+                .createdAt(pt.getCreatedAt())
+                .assignedTasks(getTasksForPublicTask(pt))
+                .build());
     }
 
     public ResponseEntity<String> addPublicTask(JsonNode publicTask, Authentication connectedUser) {
 
         String owner = connectedUser.getName();
+        String ownerEmail = keycloakService.getUserEmailById(owner);
         List<String> assignedUsersList = new LinkedList<>();
         JsonNode assignedUsers = publicTask.get("assignedUsers");
 
@@ -96,7 +94,7 @@ public class PublicTaskService {
                         .taskName(publicTask.get("taskName").asText())
                         .userId(findConnection.get().getUser().equals(owner) ? findConnection.get().getRequestedBy() : findConnection.get().getUser())
                         .userEmail(assignedUser)
-                        .createdBy(owner)
+                        .createdBy(ownerEmail)
                         .taskType(TaskType.ASSIGNED)
                         .taskStatus(TaskStatus.PENDING)
                         .build();

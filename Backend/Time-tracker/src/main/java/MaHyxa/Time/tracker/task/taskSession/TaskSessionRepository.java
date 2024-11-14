@@ -9,8 +9,7 @@ import java.util.List;
 
 public interface TaskSessionRepository extends JpaRepository <TaskSession, Long> {
 
-    @Query("SELECT ts from TaskSession ts WHERE ts.task.id = :param AND ts.isActive=true")
-    TaskSession findActiveSessionByTaskId(@Param("param") Long id);
+    TaskSession findTaskSessionByIdAndTaskId(Long sessionId, Long taskId);
 
     @Query("SELECT ts FROM TaskSession ts WHERE DATE(ts.startTime) >= :startDate AND DATE(ts.stopTime) <= :endDate AND ts.task.id = :task")
     List<TaskSession> selectSessionsByDate(@Param("startDate") Date startdate, @Param("endDate") Date endDate, @Param("task") Long id);

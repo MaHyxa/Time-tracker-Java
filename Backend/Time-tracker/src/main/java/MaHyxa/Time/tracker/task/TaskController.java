@@ -1,5 +1,6 @@
 package MaHyxa.Time.tracker.task;
 
+import MaHyxa.Time.tracker.config.RateLimitService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -7,9 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -17,33 +16,32 @@ import java.util.Map;
 public class TaskController {
 
     private final TaskService taskService;
-    private long spamPrevent = 0;
+
+    private final RateLimitService rateLimitService;
 
 
+    @GetMapping("/my-tasks")
+    public ResponseEntity<List<PersonalTaskDTO>> getAllTasksByUserId(Authentication connectedUser) {
+        return ResponseEntity.ok(taskService.getAllTasksDTOByUserId(connectedUser));
+    }
+
+    @PostMapping("/new")
+    public ResponseEntity<?> createTask(@RequestBody JsonNode taskName, Authentication connectedUser) {
+        if (connectedUser != null && rateLimitService.isAllowed(connectedUser.getName())) {
+            return taskService.createTask(taskName, connectedUser);
+        } else {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Please wait 3 seconds before creating a new Task");
+        }
+    }
 
     @GetMapping("/userStatistics")
     public ResponseEntity<StatisticResponse> getStatistic(Authentication connectedUser) {
         return ResponseEntity.ok(taskService.getStatistic(connectedUser));
     }
 
-    @PostMapping("/new")
-    public ResponseEntity<?> createTask(@RequestBody JsonNode taskName, Authentication connectedUser) {
-        if(Instant.now().getEpochSecond() > spamPrevent)
-        {
-            taskService.createTask(taskName, connectedUser);
-            //3 seconds delay between requests
-            spamPrevent = Instant.now().getEpochSecond() + 3;
-            return ResponseEntity.ok().build();
-        }
-        else {
-            return ResponseEntity.badRequest().build();
-        }
-
-    }
-
-    @GetMapping("/my-tasks")
-    public ResponseEntity<List<PersonalTaskDTO>> getAllTasksByUserId(Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.getAllTasksByUserId(connectedUser));
+    @GetMapping("/updateUserStatistics")
+    public ResponseEntity<StatisticResponse> updateStatistic(Authentication connectedUser) {
+        return ResponseEntity.ok(taskService.updateStatistic(connectedUser));
     }
 
     @PatchMapping("/my-tasks/startTask")

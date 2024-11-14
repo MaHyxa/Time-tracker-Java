@@ -1,31 +1,39 @@
 package MaHyxa.Time.tracker.task;
 
-import MaHyxa.Time.tracker.config.KeycloakService;
 import MaHyxa.Time.tracker.task.taskSession.TaskSessionService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.sql.Date;
 
 
 @Service
 @EnableScheduling
 @RequiredArgsConstructor
+@Slf4j
 public class TaskService {
-
-    private final TaskRepository taskRepository;
 
     private final TaskSessionService taskSessionService;
 
-    private final KeycloakService keycloakService;
+    private final TaskRepository taskRepository;
 
+    private final CacheService cacheService;
+
+
+    private List<Task> getAllTasksForUser(String connectedUser) {
+        List<Task> tasks = taskRepository.findAllUserTasks(connectedUser);
+        log.debug("Fetching task list from database for user=[{}]", connectedUser);
+        return tasks;
+    }
 
     private PersonalTaskDTO taskDTO (Task t) {
         return PersonalTaskDTO.builder()
@@ -36,44 +44,50 @@ public class TaskService {
                 .taskType(t.getTaskType().ordinal())
                 .taskStatus(t.getTaskStatus().ordinal())
                 .spentTime(t.getSpentTime())
-                .createdBy(t.getTaskType() == TaskType.PRIVATE ? null : keycloakService.getUserEmailById(t.getCreatedBy()))
+                .createdBy(t.getCreatedBy())
                 .build();
     }
 
+    /**
+     *
+     * @return List of Task DTO for API
+     */
 
-    public List<PersonalTaskDTO> getAllTasksByUserId(Authentication connectedUser) {
+    @Cacheable(value = "taskList", key = "'user=' + #connectedUser")
+    public List<PersonalTaskDTO> getAllTasksDTOByUserId(Authentication connectedUser) {
 
-        var userTasks = taskRepository.findAllUserTasks(connectedUser.getName());
-        if (userTasks.isEmpty())
-            return Collections.emptyList();
+        var userTasks = getAllTasksForUser(connectedUser.getName());
 
-        List<PersonalTaskDTO> personalTaskDTO = new LinkedList<>();
+        List<PersonalTaskDTO> personalTaskDTOList = new LinkedList<>();
 
         for (Task t : userTasks) {
             if(t.getTaskStatus() != TaskStatus.REJECTED) {
-                personalTaskDTO.add(taskDTO(t));
+                personalTaskDTOList.add(taskDTO(t));
             }
         }
 
-        return personalTaskDTO;
+        return personalTaskDTOList;
     }
 
-
-    public void createTask(JsonNode taskName, Authentication connectedUser) {
+    public ResponseEntity<?> createTask(JsonNode taskName, Authentication connectedUser) {
         Task task = Task.builder()
                 .taskName(taskName.get("description").asText())
                 .userId(connectedUser.getName())
                 .taskType(TaskType.PRIVATE)
                 .build();
         taskRepository.save(task);
+        cacheService.clearTaskListCache(connectedUser.getName());
+        log.debug("Created task id=[{}] for user=[{}]", task.getId(), connectedUser.getName());
+        return ResponseEntity.ok(taskDTO(task));
     }
 
+    public ResponseEntity<?> updateTask(Long requestBody, Authentication connectedUser, boolean setActive, boolean setComplete) {
 
-    private ResponseEntity<?> updateTask(Long requestBody, Authentication connectedUser, boolean setActive, boolean setComplete) {
-
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
+        String user = connectedUser.getName();
+        Task patchedTask = cacheService.cacheTask(requestBody, user);
 
         if(patchedTask == null) {
+            log.warn("Task id=[{}] for user=[{}] wasn't found during updating", requestBody, user);
             return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
         }
 
@@ -95,14 +109,15 @@ public class TaskService {
                     }
                     else {
                         patchedTask.setTaskStatus(TaskStatus.ACTIVE);
-                        taskSessionService.startSession(patchedTask);
+                        patchedTask.setActiveTaskSessionId(taskSessionService.startSession(patchedTask));
                     }
                 }
                 else {
                     //stop
                     if(ts == TaskStatus.ACTIVE) {
                         patchedTask.setTaskStatus(TaskStatus.NOT_ACTIVE);
-                        patchedTask.setSpentTime(patchedTask.getSpentTime() + taskSessionService.stopSession(patchedTask));
+                        patchedTask.setSpentTime(patchedTask.getSpentTime() + taskSessionService.stopSession(patchedTask.getActiveTaskSessionId(), patchedTask.getId()));
+                        patchedTask.setActiveTaskSessionId(null);
                     }
                     else {
                         return new ResponseEntity<>("Task is not active", HttpStatus.UPGRADE_REQUIRED);
@@ -122,7 +137,8 @@ public class TaskService {
             }
         }
 
-        taskRepository.save(patchedTask);
+        cacheService.cacheUpdatedTask(patchedTask, user);
+        cacheService.clearTaskListCache(user);
 
         return ResponseEntity.ok(taskDTO(patchedTask));
     }
@@ -142,14 +158,19 @@ public class TaskService {
 
     public ResponseEntity<?> deleteTask(Long requestBody, Authentication connectedUser) {
 
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
+        String user = connectedUser.getName();
+        Task patchedTask = cacheService.cacheTask(requestBody, user);
 
         if(patchedTask == null) {
+            log.warn("Task id=[{}] for user=[{}] wasn't found during deleting", requestBody, user);
             return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
         }
 
         if(patchedTask.getTaskType() == TaskType.PRIVATE) {
             taskRepository.delete(patchedTask);
+            cacheService.deleteCachedTask(patchedTask.getId(), user);
+            cacheService.clearTaskListCache(user);
+            log.info("Task id=[{}] for user=[{}] deleted", requestBody, user);
             return ResponseEntity.noContent().build();
         }
         else {
@@ -159,16 +180,19 @@ public class TaskService {
 
     public ResponseEntity<?> acceptTask(Long requestBody, Authentication connectedUser) {
 
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
+        String user = connectedUser.getName();
+        Task patchedTask = cacheService.cacheTask(requestBody, user);
 
         if(patchedTask == null) {
+            log.warn("Task id=[{}] for user=[{}] wasn't found during accepting assigned task", requestBody, user);
             return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
         }
 
 
         if(patchedTask.getTaskType() != TaskType.PRIVATE) {
             patchedTask.setTaskStatus(TaskStatus.ACCEPTED);
-            taskRepository.save(patchedTask);
+            cacheService.cacheUpdatedTask(patchedTask, user);
+            cacheService.clearTaskListCache(user);
             return ResponseEntity.ok(taskDTO(patchedTask));
         }
         else {
@@ -178,15 +202,18 @@ public class TaskService {
 
     public ResponseEntity<?> rejectTask(Long requestBody, Authentication connectedUser) {
 
-        Task patchedTask = taskRepository.findTaskByUserIdAndId(connectedUser.getName(), requestBody);
+        String user = connectedUser.getName();
+        Task patchedTask = cacheService.cacheTask(requestBody, user);
 
         if(patchedTask == null) {
+            log.warn("Task id=[{}] for user=[{}] wasn't found during rejecting assigned task", requestBody, user);
             return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
         }
 
         if(patchedTask.getTaskType() != TaskType.PRIVATE) {
             patchedTask.setTaskStatus(TaskStatus.REJECTED);
-            taskRepository.save(patchedTask);
+            cacheService.cacheUpdatedTask(patchedTask, user);
+            cacheService.clearTaskListCache(user);
             return ResponseEntity.noContent().build();
         }
         else {
@@ -215,14 +242,12 @@ public class TaskService {
     }
 
     public StatisticResponse getStatistic(Authentication connectedUser) {
+        return cacheService.getStatistic(connectedUser.getName());
+    }
 
-        return StatisticResponse.builder()
-                .totalUserTasks(taskRepository.findAllTasksByUser(connectedUser.getName()))
-                .activeUserTasks(taskRepository.findAllActiveTasksByUser(connectedUser.getName()))
-                .completeUserTasks(taskRepository.findAllCompleteTasksByUser(connectedUser.getName()))
-                .longestTask(taskRepository.findLongestTaskByUser(connectedUser.getName()))
-                .totalTimeSpent(taskRepository.findTasksTotalSpentTimeByUser(connectedUser.getName()))
-                .build();
+    public StatisticResponse updateStatistic(Authentication connectedUser) {
+        cacheService.clearUserStatsCache(connectedUser.getName());
+        return cacheService.getStatistic(connectedUser.getName());
     }
 
 
@@ -231,7 +256,7 @@ public class TaskService {
 //    public void stopAllActiveTasks() {
 //        taskRepository.findAllByTaskStatus(TaskStatus.ACTIVE.ordinal()).forEach(task -> {
 //            taskRepository.deactivateActiveTasks(task.getId());
-//            taskSessionService.deleteSession(task);
+//            taskSessionService.deleteSession(task.getId(), task.getActiveTaskSessionId());
 //        });
 //    }
 }

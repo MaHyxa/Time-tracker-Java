@@ -12,7 +12,7 @@ import useAxiosPrivate from "../api/useAxiosPrivate";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
-import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
+import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination} from "@mui/material";
 import Button from "@mui/material/Button";
 
 
@@ -26,6 +26,8 @@ const PublicTaskComp = ({update}) => {
     // const userEmail = getEmailFromToken();
     const [openIndex, setOpenIndex] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
 
     const openTask = (index) => {
@@ -70,20 +72,20 @@ const PublicTaskComp = ({update}) => {
         loadPublicTasks();
     }, [update, refresh]);
 
-    const loadPublicTasks = async () => {
+    const loadPublicTasks = async (page = currentPage) => {
         try {
-            const response = await axiosPrivate.get('/api/v1/public-tasks/my-tasks');
+            const response = await axiosPrivate.get('/api/v1/public-tasks/my-tasks', {
+                params: {
+                    page
+                },
+            });
 
-            const publicTasksData = Array.isArray(response.data) ? response.data : [];
+            const publicTasksData = response.data?.content || [];
 
-            if (publicTasksData.length > 0) {
-                setPublicTasks(publicTasksData);
-                setIsEmpty(false);
-            } else {
-                setIsEmpty(true);
-                setPublicTasks([]);
-            }
-
+            setPublicTasks(publicTasksData);
+            setIsEmpty(publicTasksData.length === 0);
+            setCurrentPage(response.data?.number);
+            setTotalPages(response.data?.totalPages);
         } catch (err) {
             setPublicTasks([]);
             console.error('Error:', err);
@@ -111,6 +113,11 @@ const PublicTaskComp = ({update}) => {
         }
     }
 
+    const handlePageChange = (event, page) => {
+        setCurrentPage(page - 1);
+        loadPublicTasks(page - 1);
+    };
+
     return (
         <React.Fragment>
             <Typography variant="h4" color={theme.palette.primary.blue} sx={{textAlign: 'center'}} gutterBottom mt={1}>
@@ -133,189 +140,202 @@ const PublicTaskComp = ({update}) => {
                 </Box>
             )}
             {!isEmpty && (
-                <List disablePadding>
+                <div>
+                    <List disablePadding>
 
-                    {publicTasks.map((item, index) => (
-                        <div key={index}>
-                            <Typography variant="body2" color={theme.palette.secondary.red}
-                                        sx={{
-                                            mt: 2,
-                                            display: 'flex', justifyContent: 'flex-end',
-                                        }} gutterBottom>
-                                Created on: {formatDate(item.createdAt)}
-                            </Typography>
-                            <ListItem
-                                onMouseEnter={() => setIsHovered(index)}
-                                onMouseLeave={() => setIsHovered(null)}
-                                sx={{
-                                    '&:hover': {
-                                        backgroundColor: '#f2f2f2',
-                                    },
-                                    py: 1,
-                                    minHeight: 70,
-                                    color: '#000000',
-                                    borderRadius: 1,
-                                    position: 'relative',
-                                    border: '1px solid #ccc',
-                                    backgroundImage: item.assignedTasks.filter(task => task.taskStatus === 6).length === item.assignedTasks.length
-                                        ? `url(${process.env.PUBLIC_URL}/blue.jpg)`
-                                        : 'none',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    backgroundRepeat: 'no-repeat',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {isHovered === index && (
-                                    <IconButton
-                                        sx={{
-                                            position: 'absolute',
-                                            top: -20,
-                                            right: -20,
-                                            color: 'red',
-                                        }}
-                                        onClick={handleOpenDialog}
-                                    >
-                                        <RemoveCircleIcon style={{fontSize: '115%'}}/>
-                                        <DeleteConfirmationDialog
-                                            openDialog={openDialog}
-                                            handleClose={handleOpenDialog}
-                                            handleConfirm={(e) => handleConfirm(item.id, e, index)}
-                                        />
-                                    </IconButton>
-                                )}
-
-                                <Grid container onClick={() => openTask(index)}>
-                                    <Grid item xs={12} sm={9}
-                                          sx={{
-                                              display: 'flex',
-                                              justifyContent: 'center',
-                                              alignItems: 'center',
-                                          }}>
-                                        <ListItemText
-                                            primary={item.taskName}
-                                            primaryTypographyProps={{
-                                                sx: {
-                                                    overflowWrap: 'break-word',
-                                                    wordWrap: 'break-word',
-                                                    hyphens: 'auto',
-                                                    whiteSpace: 'pre-wrap',
-                                                    textAlign: {
-                                                        xs: 'center',
-                                                        sm: 'left'
-                                                    },
-                                                    fontWeight: 'bold',
-                                                    fontSize: '1.2rem'
-                                                }
+                        {publicTasks.map((item, index) => (
+                            <div key={index}>
+                                <Typography variant="body2" color={theme.palette.secondary.red}
+                                            sx={{
+                                                mt: 2,
+                                                display: 'flex', justifyContent: 'flex-end',
+                                            }} gutterBottom>
+                                    Created on: {formatDate(item.createdAt)}
+                                </Typography>
+                                <ListItem
+                                    onMouseEnter={() => setIsHovered(index)}
+                                    onMouseLeave={() => setIsHovered(null)}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: '#f2f2f2',
+                                        },
+                                        py: 1,
+                                        minHeight: 70,
+                                        color: '#000000',
+                                        borderRadius: 1,
+                                        position: 'relative',
+                                        border: '1px solid #ccc',
+                                        backgroundImage: item.assignedTasks.filter(task => task.taskStatus === 6).length === item.assignedTasks.length
+                                            ? `url(${process.env.PUBLIC_URL}/blue.jpg)`
+                                            : 'none',
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        backgroundRepeat: 'no-repeat',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {isHovered === index && (
+                                        <IconButton
+                                            sx={{
+                                                position: 'absolute',
+                                                top: -20,
+                                                right: -20,
+                                                color: 'red',
                                             }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={3}
-                                          sx={{
-                                              display: 'flex',
-                                              justifyContent: {
-                                                  xs: 'center',
-                                                  sm: 'right'
-                                              },
-                                              alignItems: 'center',
-                                          }}>
+                                            onClick={handleOpenDialog}
+                                        >
+                                            <RemoveCircleIcon style={{fontSize: '115%'}}/>
+                                            <DeleteConfirmationDialog
+                                                openDialog={openDialog}
+                                                handleClose={handleOpenDialog}
+                                                handleConfirm={(e) => handleConfirm(item.id, e, index)}
+                                            />
+                                        </IconButton>
+                                    )}
 
-                                        <ListItemText
-                                            primary={`Completed: ${item.assignedTasks.filter(task => task.taskStatus === 6).length} / ${item.assignedTasks.length}`}
-                                            primaryTypographyProps={{
-                                                sx: {
-                                                    hyphens: 'auto',
-                                                    whiteSpace: 'pre-wrap',
-                                                    textAlign: {
-                                                        xs: 'center',
-                                                        sm: 'right'
-                                                    },
-                                                    fontWeight: 'bold',
-                                                    fontSize: '1.2rem'
-                                                }
-                                            }}
-                                        />
-                                    </Grid>
-                                    {openIndex === index && (
-                                        <Grid container
+                                    <Grid container onClick={() => openTask(index)}>
+                                        <Grid item xs={12} sm={9}
                                               sx={{
-                                                  mt: 2,
                                                   display: 'flex',
-                                                  justifyContent: 'right',
+                                                  justifyContent: 'center',
                                                   alignItems: 'center',
                                               }}>
-                                            <Grid item xs={12}>
-                                                <Divider
-                                                    sx={{
-                                                        borderColor: 'lightgrey',
-                                                        borderWidth: '1px',
-                                                        width: '85%',
-                                                        mx: 'auto',
-                                                        borderRadius: '10px'
-                                                    }}
-                                                />
-                                            </Grid>
-                                            {item.assignedTasks.map((task, index) => (
-                                                <Grid container key={index} sx={{
-                                                    mt: 1,
-                                                    borderRadius: 1,
-                                                    border: '1px solid #ccc',
-                                                    backgroundColor:
-                                                        task.taskStatus === 3 ? 'rgba(255,224,70,0.8)' :
-                                                            task.taskStatus === 5 ? 'rgba(255,0,0,0.64)' :
-                                                                task.taskStatus === 6 ? '#1976d2' :
-                                                                    'rgba(0,255,0,0.64)',
-                                                }}>
-                                                    <Grid item xs={12} md={6}
-                                                          sx={{
-                                                              display: 'flex',
-                                                              justifyContent: 'left',
-                                                              alignItems: 'center',
-                                                          }}>
-                                                        <Typography
-                                                            sx={{
-                                                                mt: 1,
-                                                                ml: 3,
-                                                                marginBottom: 1,
-                                                                color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
-                                                            }}
-                                                        >
-                                                            {task.userEmail}
-                                                        </Typography>
-                                                    </Grid>
-                                                    <Grid item xs={12} md={6}
-                                                          sx={{
-                                                              display: 'flex',
-                                                              justifyContent: {
-                                                                  md: 'flex-end',
-                                                                  xs: 'flex-start'
-                                                              },
-                                                              alignItems: 'center',
-                                                          }}>
-                                                        <Typography
-                                                            sx={{
-                                                                mt: 1,
-                                                                mr: {xs: 0, md: 3},
-                                                                ml: {xs: 3, md: 0},
-                                                                marginBottom: 1,
-                                                                color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
-                                                            }}
-                                                        >
-                                                            {task.taskStatus === 3 ? 'Waiting for acceptance' :
-                                                                task.taskStatus === 5 ? 'Rejected' :
-                                                                    task.taskStatus === 6 ? `Completed ${formatTime(task.completedAt)}` :
-                                                                        'In progress'}
-                                                        </Typography>
-                                                    </Grid>
-                                                </Grid>
-                                            ))}
+                                            <ListItemText
+                                                primary={item.taskName}
+                                                primaryTypographyProps={{
+                                                    sx: {
+                                                        overflowWrap: 'break-word',
+                                                        wordWrap: 'break-word',
+                                                        hyphens: 'auto',
+                                                        whiteSpace: 'pre-wrap',
+                                                        textAlign: {
+                                                            xs: 'center',
+                                                            sm: 'left'
+                                                        },
+                                                        fontWeight: 'bold',
+                                                        fontSize: '1.2rem'
+                                                    }
+                                                }}
+                                            />
                                         </Grid>
-                                    )}
-                                </Grid>
-                            </ListItem>
-                        </div>
-                    ))}
-                </List>
+                                        <Grid item xs={12} sm={3}
+                                              sx={{
+                                                  display: 'flex',
+                                                  justifyContent: {
+                                                      xs: 'center',
+                                                      sm: 'right'
+                                                  },
+                                                  alignItems: 'center',
+                                              }}>
+
+                                            <ListItemText
+                                                primary={`Completed: ${item.assignedTasks.filter(task => task.taskStatus === 6).length} / ${item.assignedTasks.length}`}
+                                                primaryTypographyProps={{
+                                                    sx: {
+                                                        hyphens: 'auto',
+                                                        whiteSpace: 'pre-wrap',
+                                                        textAlign: {
+                                                            xs: 'center',
+                                                            sm: 'right'
+                                                        },
+                                                        fontWeight: 'bold',
+                                                        fontSize: '1.2rem'
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
+                                        {openIndex === index && (
+                                            <Grid container
+                                                  sx={{
+                                                      mt: 2,
+                                                      display: 'flex',
+                                                      justifyContent: 'right',
+                                                      alignItems: 'center',
+                                                  }}>
+                                                <Grid item xs={12}>
+                                                    <Divider
+                                                        sx={{
+                                                            borderColor: 'lightgrey',
+                                                            borderWidth: '1px',
+                                                            width: '85%',
+                                                            mx: 'auto',
+                                                            borderRadius: '10px'
+                                                        }}
+                                                    />
+                                                </Grid>
+                                                {item.assignedTasks.map((task, index) => (
+                                                    <Grid container key={index} sx={{
+                                                        mt: 1,
+                                                        borderRadius: 1,
+                                                        border: '1px solid #ccc',
+                                                        backgroundColor:
+                                                            task.taskStatus === 3 ? 'rgba(255,224,70,0.8)' :
+                                                                task.taskStatus === 5 ? 'rgba(255,0,0,0.64)' :
+                                                                    task.taskStatus === 6 ? '#1976d2' :
+                                                                        'rgba(0,255,0,0.64)',
+                                                    }}>
+                                                        <Grid item xs={12} md={6}
+                                                              sx={{
+                                                                  display: 'flex',
+                                                                  justifyContent: 'left',
+                                                                  alignItems: 'center',
+                                                              }}>
+                                                            <Typography
+                                                                sx={{
+                                                                    mt: 1,
+                                                                    ml: 3,
+                                                                    marginBottom: 1,
+                                                                    color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
+                                                                }}
+                                                            >
+                                                                {task.userEmail}
+                                                            </Typography>
+                                                        </Grid>
+                                                        <Grid item xs={12} md={6}
+                                                              sx={{
+                                                                  display: 'flex',
+                                                                  justifyContent: {
+                                                                      md: 'flex-end',
+                                                                      xs: 'flex-start'
+                                                                  },
+                                                                  alignItems: 'center',
+                                                              }}>
+                                                            <Typography
+                                                                sx={{
+                                                                    mt: 1,
+                                                                    mr: {xs: 0, md: 3},
+                                                                    ml: {xs: 3, md: 0},
+                                                                    marginBottom: 1,
+                                                                    color: task.taskStatus === 5 || task.taskStatus === 6 ? 'white' : 'black',
+                                                                }}
+                                                            >
+                                                                {task.taskStatus === 3 ? 'Waiting for acceptance' :
+                                                                    task.taskStatus === 5 ? 'Rejected' :
+                                                                        task.taskStatus === 6 ? `Completed ${formatTime(task.completedAt)}` :
+                                                                            'In progress'}
+                                                            </Typography>
+                                                        </Grid>
+                                                    </Grid>
+                                                ))}
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </ListItem>
+                            </div>
+                        ))}
+                    </List>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                        <Pagination
+                            count={totalPages}
+                            page={currentPage + 1}
+                            onChange={handlePageChange}
+                            variant="outlined"
+                            color="primary"
+                            showFirstButton
+                            showLastButton
+                        />
+                    </Box>
+                </div>
             )}
         </React.Fragment>
     )

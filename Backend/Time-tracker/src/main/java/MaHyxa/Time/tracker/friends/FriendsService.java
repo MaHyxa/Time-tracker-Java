@@ -1,8 +1,10 @@
 package MaHyxa.Time.tracker.friends;
 
 import MaHyxa.Time.tracker.config.KeycloakService;
+import MaHyxa.Time.tracker.task.CacheService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,7 @@ public class FriendsService {
 
     private final FriendsRepository friendsRepository;
     private final KeycloakService keycloakService;
+    private final CacheService cacheService;
 
     private RelationshipStatus isFriends(String user, String requestedBy) {
         return friendsRepository.checkFriends(user, requestedBy);
@@ -45,6 +48,8 @@ public class FriendsService {
                         .status(RelationshipStatus.PENDING)
                         .build();
                 friendsRepository.save(friend);
+                cacheService.clearFriendListCache(requestedBy);
+                cacheService.clearFriendListCache(user);
                 return new ResponseEntity<>("Request successfully sent.", HttpStatus.OK);
             }
         } else {
@@ -53,7 +58,8 @@ public class FriendsService {
     }
 
 
-    public List<FriendsDTO> getAllFriendsByUser(Authentication connectedUser) {
+    @Cacheable(value = "friendList", key = "'user=' + #connectedUser.name")
+    public List<FriendsDTO> getAllUserFriends(Authentication connectedUser) {
         String user = connectedUser.getName();
         List<Friends> temp = friendsRepository.getAllFriendsByUser(user);
 
@@ -87,6 +93,8 @@ public class FriendsService {
                         .friend(friendEmail)
                         .status(foundFriend.getStatus().ordinal())
                         .build();
+                cacheService.clearFriendListCache(requestedBy);
+                cacheService.clearFriendListCache(user);
                 return ResponseEntity.ok().body(friendsDTO);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection request wasn't found or connection already established");
@@ -107,6 +115,8 @@ public class FriendsService {
         try {
             if (found.isPresent()) {
                 friendsRepository.delete(found.get());
+                cacheService.clearFriendListCache(requestedBy);
+                cacheService.clearFriendListCache(user);
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection wasn't found");

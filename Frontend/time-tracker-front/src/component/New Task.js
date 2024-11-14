@@ -32,8 +32,8 @@ export default function NewTask({update, taskWindow}) {
     const [rows, setRows] = useState(1);
 
     //This fkin function pass fkin value to fkin parent class and refresh fkin task list!
-    const refresh = () => {
-        update(success);
+    const refresh = (newTask) => {
+        update(newTask);
         taskWindow(success);
     };
 
@@ -51,12 +51,11 @@ export default function NewTask({update, taskWindow}) {
             setErrorMessage('');
             setSuccess(true);
             setTimeout(() => {
-                refresh();
+                refresh(response.data);
             }, 500);
-            console.log(response.data);
 
         } catch (err) {
-            if (err.response && err.response.status === 400) {
+            if (err.response && err.response.status === 429) {
                 setErrorMessage("Too many requests. Please try again after 3 seconds");
             } else {
                 // Handle other errors if necessary

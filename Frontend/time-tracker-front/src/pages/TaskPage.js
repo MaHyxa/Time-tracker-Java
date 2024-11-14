@@ -24,9 +24,10 @@ export default function TaskPage() {
     };
 
     //This fkin function get fkin value from fkin child class and refresh fkin task list!
-    const [update, setUpdate] = useState(true);
-    const updateTasks = () => {
-        setUpdate(!update);
+    const [newTask, setNewTask] = useState(null);
+
+    const updateTasks = (task) => {
+        setNewTask(task);
     };
 
     return (
@@ -59,7 +60,7 @@ export default function TaskPage() {
                 </StyledBox>
             )}
             <Box sx={{ position: "relative", mt: 5 }}>
-                <Tasks update={update}/>
+                <Tasks newTask={newTask} />
             </Box>
         </PageTemplate>
     );

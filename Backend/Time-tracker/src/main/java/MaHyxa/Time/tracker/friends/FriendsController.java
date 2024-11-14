@@ -1,9 +1,6 @@
 package MaHyxa.Time.tracker.friends;
 
-import MaHyxa.Time.tracker.task.Task;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +18,7 @@ public class FriendsController {
 
     @GetMapping("/my-friends")
     public ResponseEntity<List<FriendsDTO>> getAllFriendsByUserId(Authentication connectedUser) {
-        return ResponseEntity.ok(friendsService.getAllFriendsByUser(connectedUser));
+        return ResponseEntity.ok(friendsService.getAllUserFriends(connectedUser));
     }
 
     @PostMapping("/addFriend")

@@ -17,13 +17,12 @@ import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 
 
-const Tasks = ({update}) => {
+const Tasks = ({newTask}) => {
 
     const axiosPrivate = useAxiosPrivate();
     const [tasks, setTasks] = useState([]);
     const [isEmpty, setIsEmpty] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const [refresh, setRefresh] = useState(false);
     const [selectedTab, setSelectedTab] = useState(0);
 
     const privateTasks = Array.isArray(tasks)
@@ -137,7 +136,13 @@ const Tasks = ({update}) => {
     //any changes in "update" will trigger useEffect
     useEffect(() => {
         loadTasks();
-    }, [update, refresh]);
+    }, []);
+
+    useEffect(() => {
+        if (newTask) {
+            setTasks((prevTasks) => [newTask, ...prevTasks]);
+        }
+    }, [newTask]);
     const loadTasks = async () => {
         try {
             const response = await axiosPrivate.get('/api/v1/tasks/my-tasks');
@@ -204,7 +209,6 @@ const Tasks = ({update}) => {
                 data: id
             });
             if (response.status === 204) {
-                setRefresh(!refresh);
                 tasks.splice(index, 1);
                 setTasks([...tasks]);
             } else {
@@ -236,7 +240,6 @@ const Tasks = ({update}) => {
         try {
             const response = await axiosPrivate.patch('/api/v1/tasks/my-tasks/rejectTask', id.toString());
             if (response.status === 204) {
-                setRefresh(!refresh);
                 tasks.splice(index, 1);
                 setTasks([...tasks]);
             } else {
@@ -369,7 +372,12 @@ const Tasks = ({update}) => {
                                                 />
                                             </Grid>
 
-                                            <Grid item xs={12} sm={3} md={3}>
+                                            <Grid item xs={12} sm={3} md={3}
+                                                  sx={{
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      justifyContent: 'flex-end'
+                                                  }}>
                                                 <Grid container spacing={{ xs: 1, sm: 2 }} sx={{
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -693,7 +701,12 @@ const Tasks = ({update}) => {
 
 
                                             {item.task.taskStatus === 3 && (
-                                                <Grid item xs={12} sm={3} md={3}>
+                                                <Grid item xs={12} sm={3} md={3}
+                                                      sx={{
+                                                          display: 'flex',
+                                                          alignItems: 'center',
+                                                          justifyContent: 'flex-end'
+                                                      }}>
                                                     <Grid container spacing={{ xs: 1, sm: 2 }} sx={{
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -742,7 +755,12 @@ const Tasks = ({update}) => {
                                             )}
 
                                             {item.task.taskStatus !== 3 && (
-                                                <Grid item xs={12} sm={3} md={3}>
+                                                <Grid item xs={12} sm={3} md={3}
+                                                      sx={{
+                                                          display: 'flex',
+                                                          alignItems: 'center',
+                                                          justifyContent: 'flex-end'
+                                                      }}>
                                                     <Grid container spacing={{ xs: 1, sm: 2 }} sx={{
                                                         display: 'flex',
                                                         alignItems: 'center',
