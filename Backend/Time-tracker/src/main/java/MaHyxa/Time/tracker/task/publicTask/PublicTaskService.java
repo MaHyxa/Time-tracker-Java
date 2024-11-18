@@ -4,10 +4,10 @@ import MaHyxa.Time.tracker.config.KeycloakService;
 import MaHyxa.Time.tracker.friends.Friends;
 import MaHyxa.Time.tracker.friends.FriendsRepository;
 import MaHyxa.Time.tracker.friends.RelationshipStatus;
-import MaHyxa.Time.tracker.task.Task;
-import MaHyxa.Time.tracker.task.TaskRepository;
-import MaHyxa.Time.tracker.task.TaskStatus;
-import MaHyxa.Time.tracker.task.TaskType;
+import MaHyxa.Time.tracker.notification.Notification;
+import MaHyxa.Time.tracker.notification.NotificationService;
+import MaHyxa.Time.tracker.notification.NotificationStatus;
+import MaHyxa.Time.tracker.task.*;
 import MaHyxa.Time.tracker.task.taskSession.TaskForPublicTaskDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +30,8 @@ public class PublicTaskService {
     private final TaskRepository taskRepository;
     private final FriendsRepository friendsRepository;
     private final KeycloakService keycloakService;
+    private final NotificationService notificationService;
+    private final CacheService cacheService;
 
 
     private List<TaskForPublicTaskDTO> getTasksForPublicTask(PublicTask publicTask) {
@@ -79,6 +81,7 @@ public class PublicTaskService {
         List<String> responseList = new LinkedList<>();
         List<Task> taskList = new LinkedList<>();
         List<Friends> ownerFriends = friendsRepository.getAllFriendsByUser(owner);
+        StringBuilder sb = new StringBuilder();
 
         for (String assignedUser : assignedUsersList) {
 
@@ -99,7 +102,28 @@ public class PublicTaskService {
                         .taskStatus(TaskStatus.PENDING)
                         .build();
                 taskRepository.save(task);
-                responseList.add("Task for user " + assignedUser + " was successfully added.");
+                cacheService.clearTaskListCache(findConnection.get().getRequestedBy());
+                cacheService.clearTaskListCache(findConnection.get().getUser()
+                );
+
+                sb.setLength(0);
+                sb.append("Task for user ");
+                sb.append(assignedUser);
+                sb.append(" was successfully added.");
+
+                responseList.add(sb.toString());
+
+                sb.setLength(0);
+                sb.append("A new task has been assigned to you by ");
+                sb.append(ownerEmail);
+
+
+                notificationService.sendNotification(findConnection.get().getUser().equals(owner) ? findConnection.get().getRequestedBy() : findConnection.get().getUser(),
+                        Notification.builder()
+                        .status(NotificationStatus.TASK_ASSIGNED)
+                        .taskName(task.getTaskName())
+                        .message(sb.toString())
+                        .build());
                 taskList.add(task);
             } else {
                 responseList.add("Task for user " + assignedUser + " was not created, because user was not found or is not your friend yet. Please try again.");
@@ -124,11 +148,30 @@ public class PublicTaskService {
     public ResponseEntity<String> deleteTask(Long requestBody, Authentication connectedUser) {
 
         PublicTask patchedTask = publicTaskRepository.findPublicTaskByUserIdAndId(connectedUser.getName(), requestBody);
+        StringBuilder sb = new StringBuilder();
+        String ownerEmail = keycloakService.getUserEmailById(connectedUser.getName());
 
         if(patchedTask == null) {
             return new ResponseEntity<>("Task wasn't found. Please try again or refresh the page.", HttpStatus.NOT_FOUND);
         }
 
+        for (Task t : patchedTask.getAssignedTasks()) {
+
+            cacheService.clearTaskListCache(t.getUserId());
+
+            sb.setLength(0);
+            sb.append(ownerEmail);
+            sb.append(" has deleted the task assigned to you.");
+
+            notificationService.sendNotification(t.getUserId(),
+                    Notification.builder()
+                            .status(NotificationStatus.TASK_DELETED)
+                            .taskName(t.getTaskName())
+                            .message(sb.toString())
+                            .build());
+        }
+
+        cacheService.clearTaskListCache(connectedUser.getName());
         publicTaskRepository.delete(patchedTask);
 
         return ResponseEntity.noContent().build();

@@ -37,7 +37,8 @@ public class SecurityConfiguration {
                                         "/configuration/security",
                                         "/swagger-ui/**",
                                         "/webjars/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-ui.html",
+                                        "/ws/**"
                                 )
                                 .permitAll()
                                 .anyRequest()
@@ -45,9 +46,9 @@ public class SecurityConfiguration {
                 )
                 .oauth2ResourceServer(auth ->
                         auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())))
-                .exceptionHandling((exception)-> exception
+                .exceptionHandling((exception) -> exception
                         .authenticationEntryPoint((request, response, authException) ->
-                            new CustomAuthenticationFailureHandler().onAuthenticationFailure(request, response, authException)
+                                new CustomAuthenticationFailureHandler().onAuthenticationFailure(request, response, authException)
                         ));
 
         return http.build();

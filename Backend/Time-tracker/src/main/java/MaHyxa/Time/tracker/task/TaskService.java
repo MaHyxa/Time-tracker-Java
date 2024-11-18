@@ -1,5 +1,9 @@
 package MaHyxa.Time.tracker.task;
 
+import MaHyxa.Time.tracker.config.KeycloakService;
+import MaHyxa.Time.tracker.notification.Notification;
+import MaHyxa.Time.tracker.notification.NotificationService;
+import MaHyxa.Time.tracker.notification.NotificationStatus;
 import MaHyxa.Time.tracker.task.taskSession.TaskSessionService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,10 @@ public class TaskService {
 
     private final CacheService cacheService;
 
+    private final NotificationService notificationService;
+
+    private final KeycloakService keycloakService;
+
 
     private List<Task> getAllTasksForUser(String connectedUser) {
         List<Task> tasks = taskRepository.findAllUserTasks(connectedUser);
@@ -53,7 +61,7 @@ public class TaskService {
      * @return List of Task DTO for API
      */
 
-    @Cacheable(value = "taskList", key = "'user=' + #connectedUser")
+    @Cacheable(value = "taskList", key = "'user=' + #connectedUser.name")
     public List<PersonalTaskDTO> getAllTasksDTOByUserId(Authentication connectedUser) {
 
         var userTasks = getAllTasksForUser(connectedUser.getName());
@@ -134,6 +142,14 @@ public class TaskService {
             else {
                 patchedTask.setTaskStatus(TaskStatus.COMPLETED);
                 patchedTask.setCompletedAt(LocalDateTime.now());
+                if(patchedTask.getCreatedBy() != null) {
+                    notificationService.sendNotification(patchedTask.getCreatedBy(),
+                            Notification.builder()
+                                    .status(NotificationStatus.TASK_COMPLETED)
+                                    .taskName(patchedTask.getTaskName())
+                                    .message(patchedTask.getUserEmail()+" completed assigned task.")
+                                    .build());
+                }
             }
         }
 
@@ -193,6 +209,18 @@ public class TaskService {
             patchedTask.setTaskStatus(TaskStatus.ACCEPTED);
             cacheService.cacheUpdatedTask(patchedTask, user);
             cacheService.clearTaskListCache(user);
+            if(patchedTask.getCreatedBy() != null) {
+                String ownerId = keycloakService.getUserIdByEmail(patchedTask.getCreatedBy());
+                if(ownerId != null) {
+                    cacheService.clearTaskListCache(ownerId);
+                    notificationService.sendNotification(ownerId,
+                            Notification.builder()
+                                    .status(NotificationStatus.TASK_ACCEPTED)
+                                    .taskName(patchedTask.getTaskName())
+                                    .message(patchedTask.getUserEmail() + " accepted assigned task.")
+                                    .build());
+                }
+            }
             return ResponseEntity.ok(taskDTO(patchedTask));
         }
         else {
@@ -214,6 +242,18 @@ public class TaskService {
             patchedTask.setTaskStatus(TaskStatus.REJECTED);
             cacheService.cacheUpdatedTask(patchedTask, user);
             cacheService.clearTaskListCache(user);
+            if(patchedTask.getCreatedBy() != null) {
+                String ownerId = keycloakService.getUserIdByEmail(patchedTask.getCreatedBy());
+                if(ownerId != null) {
+                    cacheService.clearTaskListCache(ownerId);
+                    notificationService.sendNotification(ownerId,
+                            Notification.builder()
+                                    .status(NotificationStatus.TASK_REJECTED)
+                                    .taskName(patchedTask.getTaskName())
+                                    .message(patchedTask.getUserEmail()+" rejected assigned task.")
+                                    .build());
+                }
+            }
             return ResponseEntity.noContent().build();
         }
         else {

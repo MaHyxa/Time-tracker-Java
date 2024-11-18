@@ -38,6 +38,15 @@ services:
 #      - time-tracker-api
 #      - keycloak
 
+#  broker:
+#    image: apache/kafka:3.8.1
+#    container_name: broker
+#    ports:
+#      - 9092:9092
+#    networks:
+#      - time-tracker-network
+#    restart: unless-stopped
+
   keycloak:
     container_name: keycloak-time-tracker
     image: quay.io/keycloak/keycloak:24.0.2
@@ -59,15 +68,6 @@ services:
       - mysql
     command:
       - "start-dev"
-    restart: unless-stopped
-
-  broker:
-    image: apache/kafka:3.8.1
-    container_name: broker
-    ports:
-      - 9092:9092
-    networks:
-      - time-tracker-network
     restart: unless-stopped
 
   redis:

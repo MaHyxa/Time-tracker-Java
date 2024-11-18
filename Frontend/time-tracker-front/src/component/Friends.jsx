@@ -11,6 +11,7 @@ import {theme} from './PageTemplate';
 import Grid from "@mui/material/Grid";
 import useAxiosPrivate from "../api/useAxiosPrivate";
 import useFriends from '../api/useFriends';
+import {toast} from "react-toastify";
 
 
 const Friends = ({update}) => {
@@ -71,9 +72,11 @@ const Friends = ({update}) => {
                 prevFriends.map((f, i) => (i === index ? updatedFriend : f))
             );
 
-        } catch (err) {
+        }
+        catch (err) {
             setRefresh(!refresh);
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -90,16 +93,13 @@ const Friends = ({update}) => {
                     prevFriends.filter((_, i) => i !== index)
                 );
             } else {
-                return console.error("Something went wrong")
+                toast.error("Connection to the servers failed. Please try again in a few moments.")
             }
 
-        } catch (err) {
-            setRefresh(!refresh);
-            if (err.response) {
-                console.error('Error response:', err.response);
-            } else {
-                console.error('Error:', err);
-            }
+        }
+        catch (err) {
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 

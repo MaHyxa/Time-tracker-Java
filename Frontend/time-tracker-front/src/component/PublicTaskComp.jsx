@@ -14,6 +14,7 @@ import IconButton from "@mui/material/IconButton";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Pagination} from "@mui/material";
 import Button from "@mui/material/Button";
+import {toast} from "react-toastify";
 
 
 const PublicTaskComp = ({update}) => {
@@ -88,7 +89,8 @@ const PublicTaskComp = ({update}) => {
             setTotalPages(response.data?.totalPages);
         } catch (err) {
             setPublicTasks([]);
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     };
 
@@ -106,10 +108,11 @@ const PublicTaskComp = ({update}) => {
                 publicTasks.splice(index, 1);
                 setPublicTasks([...publicTasks]);
             } else {
-                return console.error("Something wrong")
+                toast.error("Connection to the servers failed. Please try again in a few moments.")
             }
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 

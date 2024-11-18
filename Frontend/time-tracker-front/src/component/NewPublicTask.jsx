@@ -17,6 +17,7 @@ import {TaskAlt} from "@mui/icons-material";
 import useAxiosPrivate from "../api/useAxiosPrivate";
 import Box from "@mui/material/Box";
 import useFriends from "../api/useFriends";
+import {toast} from "react-toastify";
 
 export const StyledPaper = styled(Paper)(({theme}) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -37,7 +38,6 @@ export default function NewPublicTask({update, taskWindow}) {
     const axiosPrivate = useAxiosPrivate();
     const { activeFriends, isEmpty, loadFriends} = useFriends();
     const [description, setDescription] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [rows, setRows] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -76,11 +76,13 @@ export default function NewPublicTask({update, taskWindow}) {
     const addNewPublicTask = async (e) => {
         e.preventDefault()
         if (description === null || description.trim() === "") {
-            return setErrorMessage("Task can't be empty")
+            toast.error("Task can't be empty");
+            return;
         }
 
-        if (selectedFriends.length < 0) {
-            return setErrorMessage("You must assign at least one participant")
+        if (selectedFriends.length <= 0) {
+            toast.error("You must assign at least one participant");
+            return;
         }
 
         setIsLoading(true);
@@ -90,7 +92,6 @@ export default function NewPublicTask({update, taskWindow}) {
                     taskName: description,
                     assignedUsers: selectedFriends.map(friend => friend.friend)
                 });
-            setErrorMessage('');
             setSuccess(true);
             setIsLoading(false);
             const responseArray = response.data.split('\n');
@@ -98,11 +99,8 @@ export default function NewPublicTask({update, taskWindow}) {
 
         } catch (err) {
             setIsLoading(false);
-            if (err.response) {
-                setErrorMessage(err.response.data);
-            } else {
-                setErrorMessage("An unexpected error occurred. Please try again.");
-            }
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -211,11 +209,6 @@ export default function NewPublicTask({update, taskWindow}) {
                     />
                 </Grid>
                 <Grid item xs={12}>
-                    {errorMessage && (
-                        <Typography variant="body2" color="error">
-                            {errorMessage}
-                        </Typography>
-                    )}
                     <Box>
                         {requestResponse.map((message, index) => (
                             <Typography

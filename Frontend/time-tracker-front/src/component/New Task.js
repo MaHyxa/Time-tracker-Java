@@ -8,6 +8,7 @@ import {styled} from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import {TaskAlt} from "@mui/icons-material";
 import useAxiosPrivate from "../api/useAxiosPrivate";
+import {toast} from "react-toastify";
 
 export const StyledPaper = styled(Paper)(({theme}) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -27,11 +28,9 @@ export default function NewTask({update, taskWindow}) {
 
     const axiosPrivate = useAxiosPrivate();
     const [description, setDescription] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [rows, setRows] = useState(1);
 
-    //This fkin function pass fkin value to fkin parent class and refresh fkin task list!
     const refresh = (newTask) => {
         update(newTask);
         taskWindow(success);
@@ -41,26 +40,22 @@ export default function NewTask({update, taskWindow}) {
     const addNewTask = async (e) => {
         e.preventDefault()
         if (description === null || description.trim() === "") {
-            return setErrorMessage("Task can't be empty")
+            toast.error("Task can't be empty");
+            return;
         }
         try {
             const response = await axiosPrivate.post('/api/v1/tasks/new',
                 {
                     description: description
                 });
-            setErrorMessage('');
             setSuccess(true);
             setTimeout(() => {
                 refresh(response.data);
             }, 500);
 
         } catch (err) {
-            if (err.response && err.response.status === 429) {
-                setErrorMessage("Too many requests. Please try again after 3 seconds");
-            } else {
-                // Handle other errors if necessary
-                setErrorMessage("An unexpected error occurred. Please try again.");
-            }
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -98,13 +93,6 @@ export default function NewTask({update, taskWindow}) {
                             setRows(newRows);
                         }}
                     />
-                </Grid>
-                <Grid item xs={12}>
-                    {errorMessage && (
-                        <Typography variant="body2" color="error">
-                            {errorMessage}
-                        </Typography>
-                    )}
                 </Grid>
                 <Grid item sx={{mt: 2, display: 'flex', justifyContent: 'flex-end'}}>
                     <StyledButton variant="contained" color="primary" onClick={addNewTask}>

@@ -1,5 +1,6 @@
 import {useState, useCallback, useMemo} from 'react';
 import useAxiosPrivate from "./useAxiosPrivate";
+import {toast} from "react-toastify";
 
 const useFriends = () => {
     const axiosPrivate = useAxiosPrivate();
@@ -20,7 +21,8 @@ const useFriends = () => {
                 setFriends([]);
             }
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
             setFriends([]);
         }
     }, [axiosPrivate]);

@@ -15,6 +15,7 @@ import useAxiosPrivate from "../api/useAxiosPrivate";
 import {Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Tab, Tabs} from "@mui/material";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
+import {toast} from "react-toastify";
 
 
 const Tasks = ({newTask}) => {
@@ -154,7 +155,8 @@ const Tasks = ({newTask}) => {
             }
 
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
             setTasks([]);
         }
     }
@@ -167,9 +169,9 @@ const Tasks = ({newTask}) => {
             const response = await axiosPrivate.patch('/api/v1/tasks/my-tasks/startTask', id.toString());
             tasks[index] = response.data;
             setTasks([...tasks]);
-
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -183,7 +185,8 @@ const Tasks = ({newTask}) => {
             setTasks([...tasks]);
 
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
     const completeTask = async (id, e, index) => {
@@ -196,7 +199,8 @@ const Tasks = ({newTask}) => {
             setTasks([...tasks]);
 
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -212,10 +216,11 @@ const Tasks = ({newTask}) => {
                 tasks.splice(index, 1);
                 setTasks([...tasks]);
             } else {
-                return console.error("Something wrong")
+                toast.error("Please contact support and describe chain on actions which lead to this message");
             }
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -229,7 +234,8 @@ const Tasks = ({newTask}) => {
             setTasks([...tasks]);
 
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 
@@ -243,10 +249,11 @@ const Tasks = ({newTask}) => {
                 tasks.splice(index, 1);
                 setTasks([...tasks]);
             } else {
-                return console.error("Something wrong")
+                toast.error("Please contact support and describe chain on actions which lead to this message");
             }
         } catch (err) {
-            console.error('Error:', err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         }
     }
 

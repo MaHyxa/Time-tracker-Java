@@ -6,6 +6,7 @@ import useAxiosPrivate from "../api/useAxiosPrivate";
 import Button from "@mui/material/Button";
 import UpdateIcon from '@mui/icons-material/Update';
 import {CircularProgress} from "@mui/material";
+import {toast} from "react-toastify";
 
 
 export const formatTime = (milliseconds) => {
@@ -54,7 +55,8 @@ export default function StatsPage() {
                 setIsEmpty(true);
             }
         } catch (err) {
-            console.error("Error fetching initial statistics:", err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -71,7 +73,8 @@ export default function StatsPage() {
                 setIsEmpty(true);
             }
         } catch (err) {
-            console.error("Error updating statistics:", err);
+            const errorMessage = err.response?.data || "Connection to the servers failed. Please try again in a few moments.";
+            toast.error(errorMessage);
         } finally {
             setUpdating(false);
         }

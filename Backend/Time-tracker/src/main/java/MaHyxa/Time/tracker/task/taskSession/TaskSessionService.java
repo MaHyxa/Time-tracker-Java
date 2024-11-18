@@ -1,14 +1,9 @@
 package MaHyxa.Time.tracker.task.taskSession;
 
 
-import MaHyxa.Time.tracker.kafka.taskSessionsProducer;
 import MaHyxa.Time.tracker.task.Task;
-import MaHyxa.Time.tracker.task.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -23,7 +18,7 @@ public class TaskSessionService {
 
     private final TaskSessionRepository taskSessionRepository;
 
-    private final taskSessionsProducer taskSessionsProducer;
+//    private final taskSessionsProducer taskSessionsProducer;
 
     public Long startSession(Task task) {
         TaskSession taskSession = TaskSession.builder()

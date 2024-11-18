@@ -10,32 +10,46 @@ import Layout from "./component/Layout";
 import PrivateRoute from "./component/PrivateRoute";
 import PublicTasks from "./pages/PublicTasks";
 import ConnectedUsers from "./pages/ConnectedUsers";
+import {Slide, ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENCE_KEY);
 
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Layout/>}>
-                    {/* public routes */}
+        <div>
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                transition={Slide}
+                pauseOnHover
+            />
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" element={<Layout/>}>
+                        {/* public routes */}
 
-                    <Route path="" element={<Home/>}/>
+                        <Route path="" element={<Home/>}/>
 
-                    {/* Protected routes */}
-                    <Route element={<PrivateRoute/>}>
-                        <Route path="my-info" element={<UserInfo/>}/>
-                        <Route path="connected-users" element={<ConnectedUsers/>}/>
-                        <Route path="my-tasks" element={<TaskPage/>}/>
-                        <Route path="reports" element={<Reports/>}/>
-                        <Route path="public-tasks" element={<PublicTasks/>}/>
+                        {/* Protected routes */}
+                        <Route element={<PrivateRoute/>}>
+                            <Route path="my-info" element={<UserInfo/>}/>
+                            <Route path="connected-users" element={<ConnectedUsers/>}/>
+                            <Route path="my-tasks" element={<TaskPage/>}/>
+                            <Route path="reports" element={<Reports/>}/>
+                            <Route path="public-tasks" element={<PublicTasks/>}/>
+                        </Route>
+
+                        {/* catch all */}
+                        <Route path="*" element={<Page404/>}/>
                     </Route>
-
-                    {/* catch all */}
-                    <Route path="*" element={<Page404/>}/>
-                </Route>
-            </Routes>
-        </BrowserRouter>
+                </Routes>
+            </BrowserRouter>
+        </div>
     );
 }
 

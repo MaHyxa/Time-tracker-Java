@@ -1,6 +1,9 @@
 package MaHyxa.Time.tracker.friends;
 
 import MaHyxa.Time.tracker.config.KeycloakService;
+import MaHyxa.Time.tracker.notification.Notification;
+import MaHyxa.Time.tracker.notification.NotificationService;
+import MaHyxa.Time.tracker.notification.NotificationStatus;
 import MaHyxa.Time.tracker.task.CacheService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ public class FriendsService {
     private final FriendsRepository friendsRepository;
     private final KeycloakService keycloakService;
     private final CacheService cacheService;
+    private final NotificationService notificationService;
 
     private RelationshipStatus isFriends(String user, String requestedBy) {
         return friendsRepository.checkFriends(user, requestedBy);
@@ -50,6 +54,14 @@ public class FriendsService {
                 friendsRepository.save(friend);
                 cacheService.clearFriendListCache(requestedBy);
                 cacheService.clearFriendListCache(user);
+
+                notificationService.sendNotification(user,
+                        Notification.builder()
+                                .status(NotificationStatus.REQUEST_CONN)
+                                .taskName("Connection request")
+                                .message(keycloakService.getUserEmailById(requestedBy)+" requested for a connection with you.")
+                                .build());
+
                 return new ResponseEntity<>("Request successfully sent.", HttpStatus.OK);
             }
         } else {
@@ -95,6 +107,14 @@ public class FriendsService {
                         .build();
                 cacheService.clearFriendListCache(requestedBy);
                 cacheService.clearFriendListCache(user);
+
+                notificationService.sendNotification(requestedBy,
+                        Notification.builder()
+                                .status(NotificationStatus.ACCEPT_CONN)
+                                .taskName("Connection accepted")
+                                .message(keycloakService.getUserEmailById(user)+" accepted your request for a connection.")
+                                .build());
+
                 return ResponseEntity.ok().body(friendsDTO);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection request wasn't found or connection already established");
@@ -117,6 +137,25 @@ public class FriendsService {
                 friendsRepository.delete(found.get());
                 cacheService.clearFriendListCache(requestedBy);
                 cacheService.clearFriendListCache(user);
+
+                if(found.get().getRequestedBy().equals(user)) {
+                    notificationService.sendNotification(user,
+                            Notification.builder()
+                                    .status(NotificationStatus.REJECT_CONN)
+                                    .taskName("Connection removed")
+                                    .message("Connection with "+found.get().getUser()+" removed.")
+                                    .build());
+                }
+                else {
+                    notificationService.sendNotification(requestedBy,
+                            Notification.builder()
+                                    .status(NotificationStatus.REJECT_CONN)
+                                    .taskName("Connection rejected")
+                                    .message(keycloakService.getUserEmailById(user)+" revoked your request for a connection.")
+                                    .build());
+                }
+
+
                 return ResponseEntity.noContent().build();
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Connection wasn't found");
