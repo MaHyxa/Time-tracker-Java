@@ -3,7 +3,6 @@ Backend/Time-tracker/src/main/resources/application.properties
 Backend/tests/src/Main.java
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/model/Test.java
 Backend/tests/src/Main.java
-Backend/Time-tracker/src/main/resources/application.yml
 *.env
 Backend/Time-tracker/src/main/resources/application-dev.yml
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/task/specDemo.java
@@ -16,3 +15,5 @@ Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserController.java
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserRepositoryCustom.java
 Backend/Time-tracker/src/main/java/MaHyxa/Time/tracker/config/databases/keycloak_not_in_use/UserRepositoryCustomImpl.java
+/Backend/Time-tracker/src/main/resources/application-prod.yml
+docker-compose2.yml

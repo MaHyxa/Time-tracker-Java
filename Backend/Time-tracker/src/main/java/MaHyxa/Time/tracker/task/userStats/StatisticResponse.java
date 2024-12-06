@@ -1,4 +1,4 @@
-package MaHyxa.Time.tracker.task;
+package MaHyxa.Time.tracker.task.userStats;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

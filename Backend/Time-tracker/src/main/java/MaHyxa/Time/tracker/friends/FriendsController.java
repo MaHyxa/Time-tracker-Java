@@ -27,7 +27,7 @@ public class FriendsController {
             return new ResponseEntity<>("Email cannot be empty.", HttpStatus.BAD_REQUEST);
         }
         else {
-            return friendsService.addFriend(email, connectedUser);
+            return friendsService.requestConnect(email, connectedUser);
         }
     }
 

@@ -1,6 +1,9 @@
 package MaHyxa.Time.tracker.task;
 
 import MaHyxa.Time.tracker.config.RateLimitService;
+import MaHyxa.Time.tracker.task.userStats.StatisticResponse;
+import MaHyxa.Time.tracker.task.userStats.StatisticService;
+import MaHyxa.Time.tracker.task.userStats.TaskReportResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,8 @@ public class TaskController {
 
     private final TaskService taskService;
 
+    private final StatisticService statisticService;
+
     private final RateLimitService rateLimitService;
 
 
@@ -32,16 +37,6 @@ public class TaskController {
         } else {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Please wait 3 seconds before creating a new Task");
         }
-    }
-
-    @GetMapping("/userStatistics")
-    public ResponseEntity<StatisticResponse> getStatistic(Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.getStatistic(connectedUser));
-    }
-
-    @GetMapping("/updateUserStatistics")
-    public ResponseEntity<StatisticResponse> updateStatistic(Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.updateStatistic(connectedUser));
     }
 
     @PatchMapping("/my-tasks/startTask")
@@ -74,9 +69,19 @@ public class TaskController {
         return taskService.deleteTask(requestBody, connectedUser);
     }
 
+    @GetMapping("/userStatistics")
+    public ResponseEntity<StatisticResponse> getStatistic(Authentication connectedUser) {
+        return ResponseEntity.ok(statisticService.getStatistic(connectedUser));
+    }
+
+    @GetMapping("/updateUserStatistics")
+    public ResponseEntity<StatisticResponse> updateStatistic(Authentication connectedUser) {
+        return ResponseEntity.ok(statisticService.updateStatistic(connectedUser));
+    }
+
     @PostMapping("/my-tasks/findByDates")
     public ResponseEntity<List<TaskReportResponse>> findTasksByDates(@RequestBody JsonNode dateRange, Authentication connectedUser) {
-        return ResponseEntity.ok(taskService.findTasksByDates(dateRange, connectedUser));
+        return ResponseEntity.ok(statisticService.findTasksByDates(dateRange, connectedUser));
     }
 
 }

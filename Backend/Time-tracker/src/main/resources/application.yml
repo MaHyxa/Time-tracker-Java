@@ -1,0 +1,58 @@
+spring:
+  datasource:
+    hikari:
+      leak-detection-threshold: 2000
+  application:
+    name: Time-tracker
+  keycloak:
+    datasource:
+      url: jdbc:mysql://localhost:3308/keycloak
+      username: time_tracker #from file init-db.sql
+      password: changeThis #from file init-db.sql
+  time_tracker:
+    datasource:
+      url: jdbc:mysql://localhost:3308/time_tracker
+      username: time_tracker #from file init-db.sql
+      password: changeThis #from file init-db.sql
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:9090/realms/TimeTracker"
+  #  kafka:
+  #    consumer:
+  #      bootstrap-servers: localhost:9092
+  #      auto-offset-reset: earliest
+  #      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  #      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  #    producer:
+  #      bootstrap-servers: localhost:9092
+  #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+  #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 #2 hours
+      cache-null-values: true
+  data:
+    redis:
+      port: 6379
+      host: localhost
+
+server:
+  port: 9192
+
+logging:
+  level:
+    MaHyxa.Time.tracker: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.client: DEBUG
+    org.springframework.security.oauth2: DEBUG
+
